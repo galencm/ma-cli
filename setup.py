@@ -1,0 +1,21 @@
+from setuptools import find_packages, setup
+setup(
+name="ma cli",
+    version="0.1",
+    description="",
+    author="Galen Curwen-McAdams",
+    author_email='',
+    platforms=["any"],
+    license="Mozilla Public License 2.0 (MPL 2.0)",
+    include_package_data=True,
+    data_files = [("", ["LICENSE.txt"])],
+    url="",
+    packages=find_packages(),
+    install_requires=[],
+    entry_points = {'console_scripts': ['ma-cli = ma_cli.ma_cli:main',
+                                        'ma-is = ma_cli.ma_is:main',
+                                        'ma-vis = ma_cli.ma_vis:main',
+                                        'ma-pc = ma_cli.ma_pc:main',
+                                        ],
+                            },
+)
