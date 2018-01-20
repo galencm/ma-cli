@@ -4,6 +4,8 @@ _a collection of higher-level commandline tools for the machinic ecosystem_
 
 * ma-cli: terminals for stuff
 
+* ma-dm: inspect stuff
+
 * ma-is: discovery of stuff
 
 * ma-pc: rpc and function calls to/from stuff
