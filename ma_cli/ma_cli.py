@@ -109,9 +109,15 @@ def main():
     parser = argparse.ArgumentParser(description=main.__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("service", help="service name to connect to")
     parser.add_argument("--cli", choices=("redis","mqtt","zerorpc"), help="cli type")
+    parser.add_argument("--info", action='store_true', help="print service info and quit")
 
     args = parser.parse_args()
     ip,port = local_tools.lookup(args.service)
+
+    # info prints formatted strings for copy / paste
+    if args.info:
+        print("-h {ip} -p {port} \n--port {port} --host {ip}\n{ip}:{port}".format(ip=ip, port=port))
+        return
 
     # both redis and mqtt will always connect
     # and then have no functionality
