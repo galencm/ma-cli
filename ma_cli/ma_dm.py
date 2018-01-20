@@ -6,6 +6,8 @@
 
 import argparse
 from ma_cli import data_models
+import subprocess
+import shlex
 
 def main():
     """
@@ -19,12 +21,22 @@ def main():
     # use here or ma-cli?
 
     parser = argparse.ArgumentParser(description=main.__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("uuid", help = "hash or uuid of thing")
+    parser.add_argument("uuid", nargs='?', help = "hash or uuid of thing")
     parser.add_argument("--see", help = "field to dereference and show")
     parser.add_argument("--see-all", action="store_true", help = "dereference all fields and show with display")
     parser.add_argument("--prefix", default= "glworb:", help = "set retrieval prefix for hash/uuid")
+    parser.add_argument("--pattern", default= "*", help = "list all matching pattern")
 
     args = parser.parse_args()
+
+    if args.uuid is None:
+        data_models.enumerate_data(args.pattern)
+        return
+
+    # chomp prefix from uuid if necessary
+    if args.uuid.startswith(args.prefix):
+        args.uuid = args.uuid[len(args.prefix):]
+
     data_thing = data_models.retrieve(args.uuid,prefix = args.prefix)
     data_model_string =  data_models.pretty_format(data_thing, args.uuid)
     pretty = data_models.pretty_format(data_thing, args.uuid,terminal_colors=True)

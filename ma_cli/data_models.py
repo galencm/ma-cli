@@ -34,6 +34,17 @@ def open_image(uuid,key):
     #binary_r.set(bytes_key, file.read())
     file.close()
 
+def enumerate_data(pattern):
+    
+    # terminal equivalent $ redis-cli -h {ip} -p {port} keys {pattern}
+
+    for key in r.scan_iter(match=pattern):
+        print(key)
+
+def service_connection():
+
+    return (r_ip,r_port)
+
 # from img_pipe.py
 def img_overlay(img, text, x, y, fontsize, *args):
 
