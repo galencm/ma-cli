@@ -107,12 +107,18 @@ def main():
     """
 
     parser = argparse.ArgumentParser(description=main.__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("service", help="service name to connect to")
+    parser.add_argument("service", default=None, nargs='?', help="service name to connect to")
     parser.add_argument("--cli", choices=("redis","mqtt","zerorpc"), help="cli type")
     parser.add_argument("--info", action='store_true', help="print service info and quit")
 
     args = parser.parse_args()
-    ip,port = local_tools.lookup(args.service)
+    # if run without any args, list all serivces and exit
+    if args.service is None:
+        for s in local_tools.fuzzy_lookup(""):
+            print("{service:<20}    {ip}:{port}".format(**s))
+        return
+    else:
+        ip,port = local_tools.lookup(args.service)
 
     # info prints formatted strings for copy / paste
     if args.info:
