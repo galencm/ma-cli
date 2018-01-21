@@ -123,6 +123,20 @@ def main():
     # info prints formatted strings for copy / paste
     if args.info:
         print("-h {ip} -p {port} \n--port {port} --host {ip}\n{ip}:{port}".format(ip=ip, port=port))
+        try:
+            zc = zerorpc.Client()
+            zc.connect("tcp://{}:{}".format(ip,port))
+            results = zc._zerorpc_inspect()
+            for k,v in sorted(results['methods'].items()):
+                # coerce all to strings for formatting
+                v['function'] = k
+                if v['doc']:
+                    v['doc'] = v['doc'].replace("\n"," ")
+                v = {k:str(v) for k,v in v.items()}
+                print("{function:<30}{args:<30}{doc:.20s}".format(**v))
+
+        except Exception as ex:
+            print(ex)
         return
 
     # both redis and mqtt will always connect
