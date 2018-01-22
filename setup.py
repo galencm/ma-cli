@@ -15,7 +15,7 @@ name="ma cli",
     entry_points = {'console_scripts': ['ma-cli = ma_cli.ma_cli:main',
                                         'ma-dm = ma_cli.ma_dm:main',
                                         'ma-vis = ma_cli.ma_vis:main',
-                                        'ma-pc = ma_cli.ma_pc:main',
+                                        'ma-throw = ma_cli.ma_throw:main',
                                         ],
                             },
 )
