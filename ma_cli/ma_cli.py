@@ -12,7 +12,8 @@ from functools import wraps,partialmethod
 import paho.mqtt.client as mosquitto
 from ma_cli import local_tools
 
-class CmdLineApp(Cmd):
+
+class ZeroRpcCLI(Cmd):
     """Given a host and port attempts to connect as client to zerorpc
     server. On connection gets list of remote services and dynamically
     generates attributes to allow tab completion.
@@ -36,7 +37,7 @@ class CmdLineApp(Cmd):
             #for rpc call since cmd2 will chomp first string
             f = partialmethod(self._generic,method)
             #setattr(CmdLineApp,'do_'+method,f)
-            setattr(CmdLineApp,'do_'+method, f)
+            setattr(ZeroRpcCLI,'do_'+method, f)
         Cmd.__init__(self)
 
     def _generic(self,arg,method,*args):
@@ -92,7 +93,7 @@ def cli_zerorpc(ip,port):
 
     #will try for ~10s to connect
     print("zerorpc-cli...")
-    c = CmdLineApp(ip,port)
+    c = ZeroRpcCLI(ip,port)
     c.cmdloop()
 
 def cli_mqtt(ip,port):
