@@ -6,9 +6,7 @@ _a collection of higher-level commandline tools for the machinic ecosystem_
 
 * ma-dm: inspect stuff
 
-* ma-is: discovery of stuff
-
-* ma-pc: rpc and function calls to/from stuff
+* ma-throw: throw stuff and see what responds
 
 * ma-vis: visualize stuff
 ![partial map][rel-ma-vis-svg]
