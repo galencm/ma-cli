@@ -120,7 +120,9 @@ class ZeroRpcCLI(Cmd):
             #create a method to enable tab completion and pass in method name
             #for rpc call since cmd2 will chomp first string
             f = partialmethod(self._generic,method)
-            #setattr(CmdLineApp,'do_'+method,f)
+            # docstring is not available in cmd2
+            # f.__doc__ = str(results['methods'][method]['doc'])
+            # setattr(f,'__doc__',str(results['methods'][method]['doc']))
             setattr(ZeroRpcCLI,'do_'+method, f)
         Cmd.__init__(self)
 
