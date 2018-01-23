@@ -29,10 +29,10 @@ def main():
 
         results = []
 
-        if args.service is None:
-            services = local_tools.fuzzy_lookup("zerorpc-")
-        else:
+        if args.service:
             services = args.service
+        else:
+            services = local_tools.fuzzy_lookup("zerorpc-")
 
         for s in services:
             zc = zerorpc.Client()
