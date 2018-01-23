@@ -74,7 +74,8 @@ def graph_ecosystem(title="",sanitize=False):
             zc = zerorpc.Client()
             print(service)
             zc.connect("tcp://{}:{}".format(service['ip'],service['port']))
-            result = zc("_zerorpc_inspect")
+            #result = zc("_zerorpc_inspect")
+            result = zc._zerorpc_inspect()
             #print(result)
             for k,v in result['methods'].items():
                 if k in route_calls:
