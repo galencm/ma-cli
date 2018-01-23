@@ -15,7 +15,8 @@ def main():
     """
 
     parser = argparse.ArgumentParser(description=main.__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("throwables", default=[], nargs='+', help="service name to connect to")
+    parser.add_argument("throwables", default=[], nargs='+', help="stuff to throw")
+    parser.add_argument("-s", "--service", default=[], nargs='+', help="specific service names to connect to")
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose")
 
     args = parser.parse_args()
@@ -25,8 +26,15 @@ def main():
             print("{service:<30}    {ip}:{port}".format(**s))
         return
     else:
+
         results = []
-        for s in local_tools.fuzzy_lookup("zerorpc-"):
+
+        if args.service is None:
+            services = local_tools.fuzzy_lookup("zerorpc-")
+        else:
+            services = args.service
+
+        for s in services:
             zc = zerorpc.Client()
             zc.connect("tcp://{ip}:{port}".format(**s))
             try:
@@ -39,4 +47,4 @@ def main():
                     print("{:<30} \u2717  {}".format(s['service'], ex.name))
                 pass
 
-        print(results)
+        return results
