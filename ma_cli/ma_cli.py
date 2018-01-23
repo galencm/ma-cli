@@ -93,7 +93,7 @@ class NomadCLI(Cmd):
 
     def do_purge(self,job_name):
         subs =  {k : v for k, v in locals().items() if not k == 'self'}
-        self.call_scheduler("nomad job stop -purge {address} {job_name}" ,subs)
+        self.call_scheduler("nomad stop -purge {address} {job_name}" ,subs)
 
 class ZeroRpcCLI(Cmd):
     """Given a host and port attempts to connect as client to zerorpc
