@@ -8,6 +8,7 @@ import argparse
 import subprocess
 from ma_cli import local_tools
 import zerorpc
+import pprint
 
 def main():
     """
@@ -46,5 +47,10 @@ def main():
                 if args.verbose:
                     print("{:<30} \u2717  {}".format(s['service'], ex.name))
                 pass
+
+        if args.verbose:
+            print()
+            pprint.pprint(results,indent=4)
+            print()
 
         return results
