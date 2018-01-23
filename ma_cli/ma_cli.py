@@ -24,6 +24,7 @@ class NomadCLI(Cmd):
         self.allow_redirection = False
         self.host = host
         self.port = "4646"
+        self.prompt = "{}:{}:{}>".format("nomad", host, port)
         Cmd.__init__(self)
 
     @property
@@ -107,6 +108,7 @@ class ZeroRpcCLI(Cmd):
         self.allow_redirection = False
         self.host = host
         self.port = port
+        self.prompt = "{}:{}:{}>".format("zrpc", host, port)
         zc = zerorpc.Client()
         zc.connect("tcp://{}:{}".format(self.host,self.port))
         self.client = zc
@@ -150,6 +152,7 @@ class MqttCLI(Cmd):
         self.allow_redirection = False
         self.host = host
         self.port = port
+        self.prompt = "{}:{}:{}>".format("mqtt", host, port)
         self.client = mosquitto.Client()
         self.client.on_message = self.on_message
         self.client.connect(self.host, int(self.port), 60)
