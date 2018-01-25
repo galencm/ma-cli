@@ -9,6 +9,7 @@ import subprocess
 from ma_cli import local_tools
 import zerorpc
 import pprint
+import sys
 
 def main():
     """
@@ -53,4 +54,5 @@ def main():
             pprint.pprint(results,indent=4)
             print()
 
+        sys.stdout.write(str(results))
         return results
