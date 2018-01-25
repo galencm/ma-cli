@@ -6,22 +6,32 @@
 
 from ma_cli import local_tools
 import redis
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageShow
 from contextlib import contextmanager
 import io
+import subprocess
 
 r_ip,r_port = local_tools.lookup('redis')
 r = redis.StrictRedis(host=r_ip, port=str(r_port),decode_responses=True)
 binary_r = redis.StrictRedis(host=r_ip, port=str(r_port))
 
-# from img_pipe.py
-# only read, do not rewrite
-# thus commented lines
+class FehImageViewer(ImageShow.UnixViewer):
+    def show_file(self, filename, **options):
+        # -F opens fullscreen with image scaled
+        # to fit
+        subprocess.Popen(['feh',filename,'-F'])
+        return 1
+
+#prefer feh
+ImageShow.register(FehImageViewer, order=-1)
 
 @contextmanager
-def open_image(uuid,key):
-    key_bytes = None
-    bytes_key = r.hget(uuid, key)
+def open_image(uuid,key=None):
+    if key is not None:
+        bytes_key = r.hget(uuid, key)
+    else:
+        bytes_key = uuid
+    
     key_bytes = binary_r.get(bytes_key)
     file = io.BytesIO()
     file.write(key_bytes)
@@ -57,24 +67,19 @@ def img_overlay(img, text, x, y, fontsize, *args):
         font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/DejaVuSansMono.ttf", fontsize)
         draw.text((x, y),text,(255,255,255),font=font)
 
-def view(thing_uuid, field=None, address=None, overlay="", prefix=""):
+def view(thing_uuid, field=None, overlay="", prefix=""):
+    if field is not None:
+        field_contents = r.hget(prefix + thing_uuid, field)
+        with open_image(prefix + thing_uuid, field) as img:
+            img_overlay(img,field_contents,1,1,20)
+            img_overlay(img,overlay,1,100,20)
+            img.show()
+        #return { field : field_contents }
+    else:
+        with open_image(thing_uuid) as img:
+            img_overlay(img,overlay,1,100,20)
+            img.show()
 
-    field_contents = r.hget(prefix + thing_uuid, field)
-
-    with open_image(prefix + thing_uuid, field) as img:
-        # add overlays to displayed img, 
-        # these will not be saved
-        # fontsize should probably be scaled by height/width
-        # especially for small crops
-
-        # source uuid
-        img_overlay(img,field_contents,1,1,20)
-        # data_model info
-        img_overlay(img,overlay,1,100,20)
-
-        img.show()
-
-    return { field : field_contents }
 
 def pretty_format(dictionary,title="", terminal_colors=False):
 

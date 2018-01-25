@@ -8,6 +8,7 @@ import argparse
 from ma_cli import data_models
 import subprocess
 import shlex
+import sys
 
 def main():
     """
@@ -19,6 +20,16 @@ def main():
     # this displays all glworbs on commandline:
     # redis-cli -h _ -p _ keys \glworb:*
     # use here or ma-cli?
+    keys = None
+    if not sys.stdin.isatty():
+        import re
+        keys = []
+        for line in sys.stdin:
+            # match anything that looks like a key?
+            quoted_keys = re.findall(r'\'([^]]*)\'', line)
+            keys.extend(quoted_keys)
+            if not quoted_keys and ":" in line:
+                keys.extend([line.strip()])
 
     parser = argparse.ArgumentParser(description=main.__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("uuid", nargs='?', help = "hash or uuid of thing")
@@ -28,6 +39,11 @@ def main():
     parser.add_argument("--pattern", default= "*", help = "list all matching pattern")
 
     args = parser.parse_args()
+
+    if keys:
+        for key in keys:
+            data_models.view(key,overlay = "")
+        return
 
     if args.uuid is None:
         data_models.enumerate_data(args.pattern)
