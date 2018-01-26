@@ -25,6 +25,10 @@ class FehImageViewer(ImageShow.UnixViewer):
 #prefer feh
 ImageShow.register(FehImageViewer, order=-1)
 
+class Default(dict):
+    def __missing__(self, key):
+        return "{"+key+"}"
+
 @contextmanager
 def open_image(uuid,key=None):
     if key is not None:
@@ -55,10 +59,66 @@ def service_connection():
 
     return (r_ip,r_port)
 
-# from img_pipe.py
-def img_overlay(img, text, x, y, fontsize, *args):
+def open_img(uuid,key=None):
+    if key is not None:
+        bytes_key = r.hget(uuid, key)
+    else:
+        bytes_key = uuid
 
+    key_bytes = binary_r.get(bytes_key)
+    file = io.BytesIO()
+    file.write(key_bytes)
+    image = Image.open(file)
+    #file.close()
+    # file does not get closed
+    return image
+    # yield image
+    # file = io.BytesIO()
+    # #image.save(file,image.format)
+    # image.close()
+    # file.seek(0)
+    # #binary_r.set(bytes_key, file.read())
+    # file.close()
 
+def close_img(img):
+    try:
+        img.close()
+    except:
+        pass
+
+def img_grid(img,xspacing,yspacing,r=255,g=255,b=255,a=127,**kwargs):
+    xspacing = int(xspacing)
+    yspacing = int(yspacing)
+    r = int(r)
+    g = int(g)
+    b = int(b)
+    a = int(a)
+    return img
+
+def img_rectangle(img, x, y, w, h, r=255,g=255,b=255,a=127,**kwargs):
+    x = int(x)
+    y = int(y)
+    w = int(w)
+    h = int(h)
+    r = int(r)
+    g = int(g)
+    b = int(b)
+    a = int(a)
+
+    img = img.convert("RGBA")
+    overlay = Image.new('RGBA', img.size, (0,0,0,0))
+    draw = ImageDraw.Draw(overlay)
+    draw.rectangle((x,y,x+w,y+h),(r,g,b,a))
+    img = Image.alpha_composite(img, overlay)
+    # return img otherwise composite is not visible
+    return img
+
+def img_overlay(img, text, x, y, fontsize, substitions={},**kwargs):
+    x = int(x)
+    y = int(y)
+    fontsize = int(fontsize)
+
+    text = text.format_map(Default(substitions))
     draw = ImageDraw.Draw(img)
     try:
         font = ImageFont.truetype("DejaVuSansMono.ttf", fontsize)
@@ -67,17 +127,43 @@ def img_overlay(img, text, x, y, fontsize, *args):
         font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/DejaVuSansMono.ttf", fontsize)
         draw.text((x, y),text,(255,255,255),font=font)
 
-def view(thing_uuid, field=None, overlay="", prefix=""):
+    return img
+
+def img_view(img):
+    img.show()
+    return img
+
+def view(thing_uuid, field=None, overlay="", prefix="", layers=None):
+    # ma-throw slurp _ | ma-dm --overlay "rectangle 10 10 100 100 255 255 255 50" "overlay {ocr_result1} 10 10 30"
+    env = {}
+    try:
+        env['substitutions'] = r.hgetall(thing_uuid)
+    except:
+        env['substitutions'] = {}
+
+    layers = ["rectangle 10 10 100 100 255 255 255 50","overlay foo 10 10 30"]
     if field is not None:
         field_contents = r.hget(prefix + thing_uuid, field)
         with open_image(prefix + thing_uuid, field) as img:
-            img_overlay(img,field_contents,1,1,20)
-            img_overlay(img,overlay,1,100,20)
+            img = img_overlay(img,field_contents,1,1,20)
+            img = img_overlay(img,overlay,1,100,20)
             img.show()
         #return { field : field_contents }
     else:
         with open_image(thing_uuid) as img:
             img_overlay(img,overlay,1,100,20)
+            for layer in layers:
+                layer_func = layer.split(" ")[0]
+                try:
+                    layer_args = layer.split(" ")[1:]
+                except:
+                    layer_args = []
+
+                try:
+                    img = globals()['img_'+layer_func](img,*layer_args,**env)
+                except Exception as ex:
+                    print(ex)
+
             img.show()
 
 

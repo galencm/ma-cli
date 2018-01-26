@@ -12,6 +12,63 @@ from functools import wraps,partialmethod
 import paho.mqtt.client as mosquitto
 from ma_cli import local_tools
 
+# for ImageCLI
+from ma_cli import data_models as dm
+
+class ImageCLI(Cmd):
+    """Interactively load and generated nonpersistent overlays
+    on images. Image modification functions loaded from data_models.py
+    Use generated material for pipes.
+    """
+
+    def __init__(self, host,port):
+        #disable,otherwise argparse parsers in main() will interact poorly
+        self.allow_cli_args = False
+        self.redirector = '--->'
+        self.allow_redirection = False
+        self.host = host
+        self.port = port
+        self.active_image = None
+        self.active_image_contents = None
+
+        self.prompt = "{}:{}:{}>".format("image", host, port)
+        img_funcs = []
+        img_funcs.extend([k for (k, v) in dm.__dict__.items() if not k.startswith('_') and callable(dm.__dict__[k]) and k.startswith("img_")])
+
+        for method in img_funcs:
+            f = partialmethod(self._generic,method)
+            setattr(ImageCLI,'do_'+method[4:], f)
+        Cmd.__init__(self)
+
+    def __del__(self):
+        dm.close_img(self.active_image_contents)
+
+    def _generic(self,arg,method,*args):
+        print(self,arg,method,args)
+        args = list(filter(None, args))
+        try:
+            args=args[0].split(" ")
+        except:
+            pass
+        self.active_image_contents = getattr(dm, method)(self.active_image_contents, *args)
+
+    def do_use(self,arg):
+        args = arg.split(" ")
+        image_uuid = args[0]
+        try:
+            image_key = args[1]
+        except:
+            image_key = None
+
+        dm.close_img(self.active_image_contents)
+        self.active_image = image_uuid
+        self.active_image_contents = dm.open_img(image_uuid, key=image_key)
+        print(self.active_image_contents)
+
+    def do_using(self,image_key):
+
+        print(self.active_image)
+
 class NomadCLI(Cmd):
     """Given a host and port attempts to connect as client to zerorpc
     server. On connection gets list of remote services and dynamically
@@ -176,6 +233,13 @@ def cli_redis(ip,port):
     print("redis-cli...")
     subprocess.call(['redis-cli','-h',ip,'-p',str(port)])
 
+def cli_image(ip,port):
+
+    #will try for ~10s to connect
+    print("image-cli...")
+    c = ImageCLI(ip,port)
+    c.cmdloop()
+
 def cli_zerorpc(ip,port):
 
     #will try for ~10s to connect
@@ -202,7 +266,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=main.__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("service", default=None, nargs='?', help="service name to connect to")
-    parser.add_argument("--cli", choices=("redis","mqtt","zerorpc","nomad"), help="cli type")
+    parser.add_argument("--cli", choices=("redis","mqtt","zerorpc","nomad","image"), help="cli type")
     parser.add_argument("--info", action='store_true', help="print service info and quit")
 
     args = parser.parse_args()
@@ -210,6 +274,10 @@ def main():
     if args.service is None:
         for s in local_tools.fuzzy_lookup(""):
             print("{service:<20}    {ip}:{port}".format(**s))
+        return
+    elif args.service == "image":
+        ip,port = local_tools.lookup('redis')
+        cli_image(ip,port)
         return
     else:
         ip,port = local_tools.lookup(args.service)
