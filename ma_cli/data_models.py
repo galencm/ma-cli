@@ -55,6 +55,8 @@ def enumerate_data(pattern):
     for key in r.scan_iter(match=pattern):
         print(key)
 
+    return list(r.scan_iter(match=pattern))
+
 def service_connection():
 
     return (r_ip,r_port)
