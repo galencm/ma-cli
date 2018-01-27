@@ -88,13 +88,69 @@ def close_img(img):
     except:
         pass
 
-def img_grid(img,xspacing,yspacing,r=255,g=255,b=255,a=127,**kwargs):
+def img_rotate(img,rotation):
+    rotation = int(rotation)
+    img = img.rotate(rotation, expand=1)
+    return img
+
+def img_rectangle_grid(img,xspacing=100,yspacing=100,upper_left_square=0,lower_right_square=0):
+    xspacing = int(xspacing)
+    yspacing = int(yspacing)
+    upper_left_square = int(upper_left_square)
+    lower_right_square = int(lower_right_square)
+
+    draw = ImageDraw.Draw(img)
+    imgw,imgh = img.size
+
+    grid_number = 0
+    x,y,x2,y2 = 0,0,0,0
+    for col in range(0,imgw,xspacing):
+        for row in range(0,imgh,yspacing):
+            if grid_number == upper_left_square:
+                x = col
+                y = row
+            elif grid_number == lower_right_square:
+                x2 = col + xspacing
+                y2 = row + yspacing
+
+            grid_number +=1
+
+    print(x,y,x2-x,y2-y)
+    img = img_rectangle(img,x,y,x2-x,y2-y)
+
+    return img
+
+def img_grid(img,xspacing=100,yspacing=100,r=255,g=255,b=255,a=127,label=True,**kwargs):
     xspacing = int(xspacing)
     yspacing = int(yspacing)
     r = int(r)
     g = int(g)
     b = int(b)
     a = int(a)
+    draw = ImageDraw.Draw(img)
+    imgw,imgh = img.size
+
+    for col in range(0,imgw,xspacing):
+        draw.line((col,0,col,imgh), fill=(r,g,b))
+
+    for row in range(0,imgh,yspacing):
+        draw.line((0,row,imgw,row), fill=(r,g,b))
+
+    if label:
+        grid_number = 0
+        for col in range(0,imgw,xspacing):
+            for row in range(0,imgh,yspacing):
+                draw.text((col, row),str("({}, {})".format(col,row)),(255,255,255))
+                grid_label = str("{}".format(grid_number))
+                w, h = draw.textsize(grid_label)
+                tx = int(round(col+(xspacing/2)-(w/2)))
+                ty = int(round(row+(yspacing/2)-(h/2)))
+                # print(tx,ty)
+                # #draw.text(tx, ty, grid_label, (255,255,255))
+                draw.text((tx, ty), grid_label, (255,255,255))
+                grid_number +=1
+
+    #del draw
     return img
 
 def img_rectangle(img, x, y, w, h, r=255,g=255,b=255,a=127,**kwargs):
