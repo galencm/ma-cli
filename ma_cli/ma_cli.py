@@ -14,6 +14,7 @@ from ma_cli import local_tools
 
 # for ImageCLI
 from ma_cli import data_models as dm
+import random
 
 class ImageCLI(Cmd):
     """Interactively load and generated nonpersistent overlays
@@ -57,8 +58,19 @@ class ImageCLI(Cmd):
         image_uuid = args[0]
         try:
             image_key = args[1]
+            if image_key == '_':
+                image_key = None
         except:
             image_key = None
+
+        try:
+            pattern = args[2]
+        except:
+            pattern = "glworb:*"
+
+        if image_uuid == 'random':
+            image_uuid = random.choice(dm.enumerate_data(pattern=pattern))
+        #elif image_uuid == 'latest':
 
         dm.close_img(self.active_image_contents)
         self.active_image = image_uuid
