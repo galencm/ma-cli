@@ -74,7 +74,7 @@ def open_img(uuid,key=None):
     image = Image.open(file)
     #file.close()
     # file does not get closed
-    return image
+    return image, file
     # yield image
     # file = io.BytesIO()
     # #image.save(file,image.format)
