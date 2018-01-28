@@ -15,6 +15,113 @@ from ma_cli import local_tools
 # for ImageCLI
 from ma_cli import data_models as dm
 import random
+import uuid
+import queue
+import threading
+import redis
+import json
+
+class ImageFiler(object):
+    """Manage images opened from redis key fields
+    """
+    def __init__(self):
+        self.images = {}
+        self._active_image = None
+        self._active_image_key = None
+        self._active_image_source = None
+
+    def clear(self):
+        del self.images
+        self.images = {}
+        self._active_image = None
+        self._active_image_key = None
+        self._active_image_source = None
+
+    def restore_active(self):
+        del self.images[self._active_image_source][self._active_image_key]
+        self.images[self._active_image_source][self._active_image_key] = ImageFile(*dm.open_img(self._active_image_source, key=self._active_image_key),self._active_image_key)
+        self._active_image =  self.images[self._active_image_source][self._active_image_key].img
+
+    def add_img(self, source):
+        if source not in self.images:
+            self.images[source] = {}
+
+        #get keys try to open any that look like binary
+        fields = dm.retrieve(source)
+        for k,v in fields.items():
+            if ":" in v:
+                print("trying to load key: {} value: {} as image".format(k,v))
+                try:
+                    self.images[source][k] = ImageFile(*dm.open_img(source, key=k),k)
+                    
+                    if self._active_image_source is None:
+                        self._active_image_source = source
+
+                    if self._active_image_key is None:
+                        self._active_image_key = k
+
+                    if self._active_image is None:
+                        self._active_image =  self.images[source][k].img
+
+                    # use metadata key to store all values
+                    self.images[source]['metadata'] =  fields
+
+                except Exception as ex:
+                    print(ex)
+                    pass
+
+    @property
+    def metadata(self):
+        return self.images[self._active_image_source]['metadata']
+
+    @property
+    def active_image(self):
+        return self._active_image
+
+    @active_image.setter
+    def active_image(self, value):
+        if value:
+            self.images[self._active_image_source][self._active_image_key].img = value
+            self._active_image = self.images[self._active_image_source][self._active_image_key].img
+
+    @property
+    def active_image_source(self):
+        return self._active_image_source
+
+    @active_image_source.setter
+    def active_image_source(self, value):
+        if value in self.images.keys():
+            self._active_image_source = value
+        else:
+            print("{} not in dict".format(value))
+
+    @property
+    def active_image_key(self):
+        return self._active_image_key
+
+    @active_image_key.setter
+    def active_image_key(self, value):
+        if value in self.images[self._active_image_source].keys():
+            self._active_image_key = value
+            # update active image
+            self._active_image =  self.images[self._active_image_source][ self._active_image_key].img
+        else:
+            print("{} not in dict".format(value))
+
+class ImageFile(object):
+    """Store and handle cleanup for pillow images
+    """
+    def __init__(self, img, file, hash_key=None):
+        self.img = img
+        self.file = file
+        self.hash_key = hash_key
+
+    def __del__(self):
+        print("cleanup for {}".format(self))
+        print("closing: {}".format(self.img))
+        dm.close_img(self.img)
+        print("closing: {}".format(self.file))
+        self.file.close()
 
 class ImageCLI(Cmd):
     """Interactively load and generated nonpersistent overlays
@@ -29,10 +136,14 @@ class ImageCLI(Cmd):
         self.allow_redirection = False
         self.host = host
         self.port = port
-        self.active_image = None
-        self.active_image_contents = None
 
+        self.source = None
+        self.images = ImageFiler()
+
+        self.op_stack = []
+        self.pipes = []
         self.prompt = "{}:{}:{}>".format("image", host, port)
+        
         img_funcs = []
         img_funcs.extend([k for (k, v) in dm.__dict__.items() if not k.startswith('_') and callable(dm.__dict__[k]) and k.startswith("img_")])
 
@@ -42,18 +153,23 @@ class ImageCLI(Cmd):
         Cmd.__init__(self)
 
     def __del__(self):
-        dm.close_img(self.active_image_contents)
+        # close open images and files
+        del self.images
 
-    def _generic(self,arg,method,*args):
+    def _generic(self, arg, method, *args):
         print(self,arg,method,args)
         args = list(filter(None, args))
         try:
             args=args[0].split(" ")
         except:
             pass
-        self.active_image_contents = getattr(dm, method)(self.active_image_contents, *args)
+        self.images.active_image = getattr(dm, method)(self.images.active_image, *args)
+        self.op_stack.append((method,args))
 
-    def do_use(self,arg):
+    def do_use(self, arg):
+
+        #use random image_binary_key
+        
         args = arg.split(" ")
         image_uuid = args[0]
         try:
@@ -70,16 +186,99 @@ class ImageCLI(Cmd):
 
         if image_uuid == 'random':
             image_uuid = random.choice(dm.enumerate_data(pattern=pattern))
-        #elif image_uuid == 'latest':
+        
+        self.images.clear()
+        self.images.add_img(image_uuid)
 
-        dm.close_img(self.active_image_contents)
-        self.active_image = image_uuid
-        self.active_image_contents = dm.open_img(image_uuid, key=image_key)
-        print(self.active_image_contents)
+    def do_using(self, arg):
 
-    def do_using(self,image_key):
+        print("source: {} field: {}".format(self.images.active_image_source, self.images.active_image_key))
 
-        print(self.active_image)
+    def do_key(self, arg):
+
+        self.images.active_image_key = arg
+
+    def do_info(self, arg):
+
+        terminal_colors = True
+        color_green = "\033[0;32m"
+        color_end = "\033[0;0m"
+        pretty_string =""
+        
+        for k,v in self.images.metadata.items():
+            if "binary" in v and ":" in v and terminal_colors:
+                pretty_string += "{:<30}{}{}{}".format(k,color_green,v,color_end)
+            else:
+                pretty_string +=  "{:<30}{}".format(k,v)
+
+            if k == self.images.active_image_key:
+                pretty_string += " * (active)"
+
+            pretty_string += "\n"
+        print(pretty_string)
+
+    def do_reuse(self, arg):
+        self.images.restore_active()
+        self.op_stack = []
+
+    def do_ops(self, arg):
+
+        for op_num, op in enumerate(self.op_stack):
+            print("{:<5}{}".format(op_num,"{} {}".format(op[0],' '.join(op[1]))))
+
+    def do_pipe(self,arg):
+        # create anonymous temporary pipe, no dashes in name
+        pipe_name = "tmp{}".format(str(uuid.uuid4())).replace("-","")
+        subprocess.call(["lings-pipe-add", pipe_name, "--expire","600"])
+        self.pipes.append(pipe_name)
+
+    def do_pipe_append(self, arg):
+        # pipe_append rotate 90
+        pipe_name = self.pipes[-1]
+        pipe_string = arg
+        subprocess.call(["lings-pipe-modify", pipe_name, pipe_string,"--append"])
+        #pipename, pipe string
+
+    def do_pipe_save(self, arg):
+        pass
+   
+    def do_dry_route(self, arg):
+        pass
+
+    def do_dry_pipe(self, arg):
+
+        # prepare listener for end of pipe message
+        q = queue.Queue()
+        r_ip,r_port = local_tools.lookup('redis')
+        r = redis.StrictRedis(host=r_ip, port=str(r_port),decode_responses=True)
+        channel = "/pipe/{}/completed".format(self.pipes[-1])
+        print("channel: {}".format(channel))
+        t = threading.Thread(target=self.listen_pipe_finish,args=(channel,r,q))
+        t.start()
+
+        # duplicate hash and send through pipe
+        duplicate = dm.duplicate(self.images.active_image_source)
+        # need to pass in env for field/key
+        subprocess.call(["lings-pipe-run", self.pipes[-1], duplicate,"--context",json.dumps({"key" : self.images.active_image_key})])
+
+        # get end of pipe message and show result
+        post_pipe = q.get()
+        t.join()
+        print("post pipe: {}".format(post_pipe))
+        dm.view(post_pipe,field=self.images.active_image_key)
+        
+        
+    def listen_pipe_finish(self, channel, redis_conn, q):
+
+        pubsub = redis_conn.pubsub()
+        pubsub.subscribe([channel])
+        for item in pubsub.listen():
+            if item['data'] != 1:
+                print(item)
+                q.put(item['data'])
+                pubsub.unsubscribe()
+                break
+
 
 class NomadCLI(Cmd):
     """Given a host and port attempts to connect as client to zerorpc
