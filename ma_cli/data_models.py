@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageShow
 from contextlib import contextmanager
 import io
 import subprocess
+import uuid
 
 r_ip,r_port = local_tools.lookup('redis')
 r = redis.StrictRedis(host=r_ip, port=str(r_port),decode_responses=True)
@@ -239,6 +240,32 @@ def pretty_format(dictionary,title="", terminal_colors=False):
             pretty_string +=  "{:<30}{}\n".format(k,v)
 
     return pretty_string
+
+def duplicate(thing_uuid,ttl=600):
+
+    # update uuid field?
+    # restore ttl is milliseconds
+    ttl *= 1000
+    serialized = binary_r.dump(thing_uuid)
+    prefix =  thing_uuid.split(":")[0]
+    new_uuid = "{}:{}".format(prefix, str(uuid.uuid4()))
+    r.restore(new_uuid, ttl, serialized)
+
+    try:
+        hashes = r.hgetall(new_uuid)
+        # update referenced binaries
+        # so they can be modified by
+        # pipes
+        for k,v in hashes.items():
+            if "key" in k and ":" in v:
+                hashes[k] = duplicate(v)
+                print("updating reference hash: {} to {}".format(v,hashes[k]))
+    except Exception as ex:
+        print(ex)
+        pass
+
+    print("duplicate: {}".format(new_uuid))
+    return new_uuid
 
 def retrieve(thing_uuid,prefix=""):
 
