@@ -20,6 +20,7 @@ def main():
     parser.add_argument("throwables", default=[], nargs='+', help="stuff to throw")
     parser.add_argument("-s", "--service", default=[], nargs='+', help="specific service names to connect to")
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose")
+    parser.add_argument("--pretty", action="store_true", help="pretty print")
 
     args = parser.parse_args()
 
@@ -43,16 +44,22 @@ def main():
                 result = getattr(zc, args.throwables[0])(*args.throwables[1:])
                 results.append(result)
                 if args.verbose:
-                    print("{:<30} \u2713  {}".format(s['service'], result))
+                    print("{:<30} \u2713".format(s['service']))
+                    for r in result:
+                        print(" " * 4 + "{}".format(str(r)))
             except Exception as ex:
                 if args.verbose:
                     print("{:<30} \u2717  {}".format(s['service'], ex.name))
-                pass
+            if args.verbose:
+                print()
 
-        if args.verbose:
+        if args.pretty:
             print()
             pprint.pprint(results,indent=4)
             print()
-
-        sys.stdout.write(str(results))
-        return results
+            return
+        elif args.verbose:
+            return
+        else:
+            sys.stdout.write(str(results))
+            return results
