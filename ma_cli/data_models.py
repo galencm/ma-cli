@@ -204,6 +204,56 @@ def img_column(img,xspacing=100,r=255,g=255,b=255,a=127,label=True,**kwargs):
 
     return img
 
+def img_rectangle_row(img,yspacing=100,upper_row=0,lower_row=0):
+    yspacing = int(yspacing)
+    upper_row = int(upper_row)
+    lower_row = int(lower_row)
+
+    draw = ImageDraw.Draw(img)
+    imgw,imgh = img.size
+
+    row_number = 0
+    x,y,x2,y2 = 0,0,0,0
+    for row in range(0,imgh,yspacing):
+        if row_number == upper_row:
+            x = 0
+            y = row
+        elif row_number == lower_row:
+            x2 = imgw
+            y2 = row + yspacing
+
+        row_number +=1
+
+    print(x,y,x2-x,y2-y)
+    img = img_rectangle(img,x,y,x2-x,y2-y)
+
+    return img
+
+def img_row(img,yspacing=100,r=255,g=255,b=255,a=127,label=True,**kwargs):
+    yspacing = int(yspacing)
+    r = int(r)
+    g = int(g)
+    b = int(b)
+    a = int(a)
+    draw = ImageDraw.Draw(img)
+    imgw,imgh = img.size
+
+    for row in range(0,imgh,yspacing):
+        draw.line((0,row,imgw,row), fill=(r,g,b))
+
+    if label:
+        row_number = 0
+        for row in range(0,imgh,yspacing):
+            draw.text((0, row),str("({}, {})".format(0,row)),(255,255,255))
+            row_label = str("{}".format(row_number))
+            w, h = draw.textsize(row_label)
+            tx = int(round(imgw/2))
+            ty = int(round(row+(yspacing/2)-(h/2)))
+            draw.text((tx, ty), row_label, (255,255,255))
+            row_number +=1
+
+    return img
+
 def img_rectangle(img, x, y, w, h, r=255,g=255,b=255,a=127,**kwargs):
     x = int(x)
     y = int(y)
