@@ -154,6 +154,56 @@ def img_grid(img,xspacing=100,yspacing=100,r=255,g=255,b=255,a=127,label=True,**
     #del draw
     return img
 
+def img_rectangle_column(img,xspacing=100,left_column=0,right_column=0):
+    xspacing = int(xspacing)
+    left_column = int(left_column)
+    right_column = int(right_column)
+
+    draw = ImageDraw.Draw(img)
+    imgw,imgh = img.size
+
+    column_number = 0
+    x,y,x2,y2 = 0,0,0,0
+    for col in range(0,imgw,xspacing):
+        if column_number == left_column:
+            x = col
+            y = 0
+        elif column_number == right_column:
+            x2 = col + xspacing
+            y2 = imgh
+
+        column_number +=1
+
+    print(x,y,x2-x,y2-y)
+    img = img_rectangle(img,x,y,x2-x,y2-y)
+
+    return img
+
+def img_column(img,xspacing=100,r=255,g=255,b=255,a=127,label=True,**kwargs):
+    xspacing = int(xspacing)
+    r = int(r)
+    g = int(g)
+    b = int(b)
+    a = int(a)
+    draw = ImageDraw.Draw(img)
+    imgw,imgh = img.size
+
+    for col in range(0,imgw,xspacing):
+        draw.line((col,0,col,imgh), fill=(r,g,b))
+
+    if label:
+        column_number = 0
+        for col in range(0,imgw,xspacing):
+            draw.text((col, 0),str("({}, {})".format(col,0)),(255,255,255))
+            column_label = str("{}".format(column_number))
+            w, h = draw.textsize(column_label)
+            tx = int(round(col+(xspacing/2)-(w/2)))
+            ty = int(round((imgh/2)))
+            draw.text((tx, ty), column_label, (255,255,255))
+            column_number +=1
+
+    return img
+
 def img_rectangle(img, x, y, w, h, r=255,g=255,b=255,a=127,**kwargs):
     x = int(x)
     y = int(y)
