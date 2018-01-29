@@ -294,18 +294,23 @@ class ImageCLI(Cmd):
         """Create a route for working pipe
         """
         arg = arg.split(" ")
-        route = "if '{source}' do pipe {pipe}".format(source=arg[0],pipe=self.pipes[-1])
+        route = "if '{source}' do pipe {pipe} keyzzzz{key}".format(source=arg[0],pipe=self.pipes[-1],key=self.images.active_image_key)
         self.routes.append(route)
         print(subprocess.check_output(["lings-route-add", route]))
 
     def do_dry_route(self, arg):
-        self.do_dry_pipe("wait")
-        # {"key" : self.images.active_image_key}
+        """ Dry run of testing route and pipe
+        """
+        args = arg.split(" ")
+        print(args)
+        source = args[0]
+        self.do_dry_pipe("wait {source}".format(source=source))
 
     def do_dry_pipe(self, arg):
         args = arg.split(" ")
         if args[0] == "wait":
             run_pipe_directly = False
+            source_channel = args[1]
         else:
             run_pipe_directly = True
 
@@ -328,6 +333,9 @@ class ImageCLI(Cmd):
                              "--context",
                              json.dumps({"key" : self.images.active_image_key})
                             ])
+        else:
+            # publish uuid on route source
+            r.publish(source_channel, duplicate)
 
         # get end of pipe message and show result
         post_pipe = q.get()
