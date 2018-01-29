@@ -184,12 +184,12 @@ class ImageCLI(Cmd):
 
     def do_exit(self,args):
         # cleanup created routes
-        self.do_route_clean()
+        self.do_route_clean("")
         return True
 
     def do_quit(self,args):
         # cleanup created routes
-        self.do_route_clean()
+        self.do_route_clean("")
         return True
 
     def do_use(self, arg):
