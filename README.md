@@ -4,6 +4,8 @@ _a collection of higher-level commandline tools for the machinic ecosystem_
 
 * ma-cli: terminals for stuff
 
+* ma-deck: bind stuff, press stuff, throw code, set state
+
 * ma-dm: inspect stuff
 
 * ma-throw: throw stuff and see what responds
