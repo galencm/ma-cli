@@ -6,20 +6,18 @@
 
 import argparse
 import subprocess
-import zerorpc
-from cmd2 import Cmd
-from functools import wraps,partialmethod
-import paho.mqtt.client as mosquitto
-from ma_cli import local_tools
-
-# for ImageCLI
-from ma_cli import data_models as dm
 import random
 import uuid
 import queue
 import threading
-import redis
 import json
+from functools import partialmethod
+import redis
+from cmd2 import Cmd
+import paho.mqtt.client as mosquitto
+import zerorpc
+from ma_cli import local_tools
+from ma_cli import data_models as dm
 
 class ImageFiler(object):
     """Manage images opened from redis key fields
@@ -38,9 +36,12 @@ class ImageFiler(object):
         self._active_image_source = None
 
     def restore_active(self):
-        del self.images[self._active_image_source][self._active_image_key]
-        self.images[self._active_image_source][self._active_image_key] = ImageFile(*dm.open_img(self._active_image_source, key=self._active_image_key),self._active_image_key)
-        self._active_image =  self.images[self._active_image_source][self._active_image_key].img
+        source = self._active_image_source
+        key = self._active_image_key
+
+        del self.images[source][key]
+        self.images[source][key] = ImageFile(*dm.open_img(source, key=key), key)
+        self._active_image = self.images[source][key].img
 
     def add_img(self, source):
         if source not in self.images:
@@ -48,12 +49,12 @@ class ImageFiler(object):
 
         #get keys try to open any that look like binary
         fields = dm.retrieve(source)
-        for k,v in fields.items():
+        for k, v in fields.items():
             if ":" in v:
-                print("trying to load key: {} value: {} as image".format(k,v))
+                print("trying to load key: {} value: {} as image".format(k, v))
                 try:
-                    self.images[source][k] = ImageFile(*dm.open_img(source, key=k),k)
-                    
+                    self.images[source][k] = ImageFile(*dm.open_img(source, key=k), k)
+
                     if self._active_image_source is None:
                         self._active_image_source = source
 
@@ -61,14 +62,13 @@ class ImageFiler(object):
                         self._active_image_key = k
 
                     if self._active_image is None:
-                        self._active_image =  self.images[source][k].img
+                        self._active_image = self.images[source][k].img
 
                     # use metadata key to store all values
-                    self.images[source]['metadata'] =  fields
+                    self.images[source]['metadata'] = fields
 
                 except Exception as ex:
                     print(ex)
-                    pass
 
     @property
     def metadata(self):
@@ -104,7 +104,7 @@ class ImageFiler(object):
         if value in self.images[self._active_image_source].keys():
             self._active_image_key = value
             # update active image
-            self._active_image =  self.images[self._active_image_source][ self._active_image_key].img
+            self._active_image = self.images[self._active_image_source][value].img
         else:
             print("{} not in dict".format(value))
 
@@ -129,7 +129,7 @@ class ImageCLI(Cmd):
     Use generated material for pipes.
     """
 
-    def __init__(self, host,port):
+    def __init__(self, host, port):
         #disable,otherwise argparse parsers in main() will interact poorly
         self.allow_cli_args = False
         self.redirector = '--->'
@@ -143,13 +143,17 @@ class ImageCLI(Cmd):
         self.op_stack = []
         self.pipes = []
         self.prompt = "{}:{}:{}>".format("image", host, port)
-        
+
         img_funcs = []
-        img_funcs.extend([k for (k, v) in dm.__dict__.items() if not k.startswith('_') and callable(dm.__dict__[k]) and k.startswith("img_")])
+        img_funcs.extend([k for (k, v) in dm.__dict__.items() if
+                          not k.startswith('_')
+                          and callable(dm.__dict__[k])
+                          and k.startswith("img_")
+                         ])
 
         for method in img_funcs:
-            f = partialmethod(self._generic,method)
-            setattr(ImageCLI,'do_'+method[4:], f)
+            f = partialmethod(self._generic, method)
+            setattr(ImageCLI, 'do_'+method[4:], f)
         Cmd.__init__(self)
 
     def __del__(self):
@@ -157,19 +161,19 @@ class ImageCLI(Cmd):
         del self.images
 
     def _generic(self, arg, method, *args):
-        print(self,arg,method,args)
+        print(self, arg, method, args)
         args = list(filter(None, args))
         try:
-            args=args[0].split(" ")
+            args = args[0].split(" ")
         except:
             pass
         self.images.active_image = getattr(dm, method)(self.images.active_image, *args)
-        self.op_stack.append((method,args))
+        self.op_stack.append((method, args))
 
     def do_use(self, arg):
 
         #use random image_binary_key
-        
+
         args = arg.split(" ")
         image_uuid = args[0]
         try:
@@ -186,13 +190,14 @@ class ImageCLI(Cmd):
 
         if image_uuid == 'random':
             image_uuid = random.choice(dm.enumerate_data(pattern=pattern))
-        
+
         self.images.clear()
         self.images.add_img(image_uuid)
 
     def do_using(self, arg):
 
-        print("source: {} field: {}".format(self.images.active_image_source, self.images.active_image_key))
+        print("source: {} field: {}".format(self.images.active_image_source,
+                                            self.images.active_image_key))
 
     def do_key(self, arg):
 
@@ -203,13 +208,13 @@ class ImageCLI(Cmd):
         terminal_colors = True
         color_green = "\033[0;32m"
         color_end = "\033[0;0m"
-        pretty_string =""
-        
-        for k,v in self.images.metadata.items():
+        pretty_string = ""
+
+        for k, v in self.images.metadata.items():
             if "binary" in v and ":" in v and terminal_colors:
-                pretty_string += "{:<30}{}{}{}".format(k,color_green,v,color_end)
+                pretty_string += "{:<30}{}{}{}".format(k, color_green, v, color_end)
             else:
-                pretty_string +=  "{:<30}{}".format(k,v)
+                pretty_string += "{:<30}{}".format(k, v)
 
             if k == self.images.active_image_key:
                 pretty_string += " * (active)"
@@ -224,24 +229,24 @@ class ImageCLI(Cmd):
     def do_ops(self, arg):
 
         for op_num, op in enumerate(self.op_stack):
-            print("{:<5}{}".format(op_num,"{} {}".format(op[0],' '.join(op[1]))))
+            print("{:<5}{}".format(op_num, "{} {}".format(op[0], ' '.join(op[1]))))
 
-    def do_pipe(self,arg):
+    def do_pipe(self, arg):
         # create anonymous temporary pipe, no dashes in name
-        pipe_name = "tmp{}".format(str(uuid.uuid4())).replace("-","")
-        subprocess.call(["lings-pipe-add", pipe_name, "--expire","600"])
+        pipe_name = "tmp{}".format(str(uuid.uuid4())).replace("-", "")
+        subprocess.call(["lings-pipe-add", pipe_name, "--expire", "600"])
         self.pipes.append(pipe_name)
 
     def do_pipe_append(self, arg):
         # pipe_append rotate 90
         pipe_name = self.pipes[-1]
         pipe_string = arg
-        subprocess.call(["lings-pipe-modify", pipe_name, pipe_string,"--append"])
+        subprocess.call(["lings-pipe-modify", pipe_name, pipe_string, "--append"])
         #pipename, pipe string
 
     def do_pipe_save(self, arg):
         pass
-   
+
     def do_dry_route(self, arg):
         pass
 
@@ -249,25 +254,29 @@ class ImageCLI(Cmd):
 
         # prepare listener for end of pipe message
         q = queue.Queue()
-        r_ip,r_port = local_tools.lookup('redis')
-        r = redis.StrictRedis(host=r_ip, port=str(r_port),decode_responses=True)
+        r_ip, r_port = local_tools.lookup('redis')
+        r = redis.StrictRedis(host=r_ip, port=str(r_port), decode_responses=True)
         channel = "/pipe/{}/completed".format(self.pipes[-1])
         print("channel: {}".format(channel))
-        t = threading.Thread(target=self.listen_pipe_finish,args=(channel,r,q))
+        t = threading.Thread(target=self.listen_pipe_finish, args=(channel, r, q))
         t.start()
 
         # duplicate hash and send through pipe
         duplicate = dm.duplicate(self.images.active_image_source)
         # need to pass in env for field/key
-        subprocess.call(["lings-pipe-run", self.pipes[-1], duplicate,"--context",json.dumps({"key" : self.images.active_image_key})])
+        subprocess.call(["lings-pipe-run",
+                         self.pipes[-1],
+                         duplicate,
+                         "--context",
+                         json.dumps({"key" : self.images.active_image_key})
+                        ])
 
         # get end of pipe message and show result
         post_pipe = q.get()
         t.join()
         print("post pipe: {}".format(post_pipe))
-        dm.view(post_pipe,field=self.images.active_image_key)
-        
-        
+        dm.view(post_pipe, field=self.images.active_image_key)
+
     def listen_pipe_finish(self, channel, redis_conn, q):
 
         pubsub = redis_conn.pubsub()
@@ -279,13 +288,12 @@ class ImageCLI(Cmd):
                 pubsub.unsubscribe()
                 break
 
-
 class NomadCLI(Cmd):
     """Given a host and port attempts to connect as client to zerorpc
     server. On connection gets list of remote services and dynamically
     generates attributes to allow tab completion.
     """
-    def __init__(self, host,port):
+    def __init__(self, host, port):
         #disable,otherwise argparse parsers in main() will interact poorly
         self.allow_cli_args = False
         self.redirector = '--->'
@@ -297,79 +305,80 @@ class NomadCLI(Cmd):
 
     @property
     def scheduler_address(self):
-        return "-address=http://{}:{}".format(self.host,self.port)
+        return "-address=http://{}:{}".format(self.host, self.port)
 
-    def call_scheduler(self,call_string,subs,raw=False):
+    def call_scheduler(self, call_string, subs, raw=False):
         subs.update({"address" : self.scheduler_address})
         call_string = call_string.format(**subs)
         output = subprocess.check_output(call_string.split(" ")).decode()
         print(output)
         if raw:
             return output
+        return None
 
-    def do_status(self,args):
-        self.call_scheduler("nomad status {address}",{})
+    def do_status(self, args):
+        self.call_scheduler("nomad status {address}", {})
 
     def do_logs(self, job_id):
-        subs =  {k : v for k, v in locals().items() if not k == 'self'}
+        subs = {k : v for k, v in locals().items() if not k == 'self'}
         retry_with_id = False
         try:
-            self.call_scheduler("nomad logs {address} {job_id}" ,subs)
-            self.call_scheduler("nomad logs -stderr {address} {job_id}" ,subs)
+            self.call_scheduler("nomad logs {address} {job_id}", subs)
+            self.call_scheduler("nomad logs -stderr {address} {job_id}", subs)
         except:
             # Try to scrape for job id
             # this will not work well if a job
             # has multiple ids
-            job_id = self.call_scheduler("nomad job status {address} {job_id}" ,subs,raw=True)
+            job_id = self.call_scheduler("nomad job status {address} {job_id}", subs, raw=True)
             id_line = False
             for line in job_id.split("\n"):
-                print(">>",line)
+                print(">>", line)
                 if id_line:
                     # overwrite subs jobs_id with scraped
-                    subs['job_id'] = line.split(" ",1)[0]
+                    subs['job_id'] = line.split(" ", 1)[0]
                     retry_with_id = True
                     break
                 if "Node ID" in line:
                     id_line = True
 
         if retry_with_id is True:
-            self.call_scheduler("nomad logs {address} {job_id}" ,subs)
-            self.call_scheduler("nomad logs -stderr {address} {job_id}" ,subs)
+            self.call_scheduler("nomad logs {address} {job_id}", subs)
+            self.call_scheduler("nomad logs -stderr {address} {job_id}", subs)
 
-    def do_job(self,job_name):
-        subs =  {k : v for k, v in locals().items() if not k == 'self'}
-        self.call_scheduler("nomad job status {address} {job_name}" ,subs)
+    def do_job(self, job_name):
+        subs = {k : v for k, v in locals().items() if not k == 'self'}
+        self.call_scheduler("nomad job status {address} {job_name}", subs)
 
-    def do_start(self,job_name):
+    def do_start(self, job_name):
         # alias for run
         # assumes running on machine that job files
         # were generated on.
         # expects generated job files in:
         # ~/.local/jobs
         import os
-        subs =  {k : v for k, v in locals().items() if not k == 'self'}
-        job_file  = os.path.join(os.path.expanduser('~'),".local/jobs","{}.hcl".format(job_name))
+        subs = {k : v for k, v in locals().items() if not k == 'self'}
+        job_file = os.path.join(os.path.expanduser('~'), ".local/jobs", "{}.hcl".format(job_name))
         print(job_file)
         if os.path.isfile(job_file):
             subs['job_file'] = job_file
-            self.call_scheduler("nomad run {address} {job_file}" ,subs)
+            self.call_scheduler("nomad run {address} {job_file}", subs)
         else:
             print("not found: {job_file}".format(**subs))
 
-    def do_stop(self,job_name):
-        subs =  {k : v for k, v in locals().items() if not k == 'self'}
-        self.call_scheduler("nomad stop {address} {job_name}" ,subs)
+    def do_stop(self, job_name):
+        subs = {k : v for k, v in locals().items() if not k == 'self'}
+        self.call_scheduler("nomad stop {address} {job_name}", subs)
 
-    def do_purge(self,job_name):
-        subs =  {k : v for k, v in locals().items() if not k == 'self'}
-        self.call_scheduler("nomad stop -purge {address} {job_name}" ,subs)
+    def do_purge(self, job_name):
+        subs = {k : v for k, v in locals().items() if not k == 'self'}
+        self.call_scheduler("nomad stop -purge {address} {job_name}", subs)
 
 class ZeroRpcCLI(Cmd):
     """Given a host and port attempts to connect as client to zerorpc
     server. On connection gets list of remote services and dynamically
     generates attributes to allow tab completion.
     """
-    def __init__(self, host,port):
+    def __init__(self, host, port):
         #disable,otherwise argparse parsers in main() will interact poorly
         self.allow_cli_args = False
         self.redirector = '--->'
@@ -378,7 +387,7 @@ class ZeroRpcCLI(Cmd):
         self.port = port
         self.prompt = "{}:{}:{}>".format("zrpc", host, port)
         zc = zerorpc.Client()
-        zc.connect("tcp://{}:{}".format(self.host,self.port))
+        zc.connect("tcp://{}:{}".format(self.host, self.port))
         self.client = zc
         #get list of available services from zerorpc
         results = zc._zerorpc_inspect()
@@ -387,27 +396,27 @@ class ZeroRpcCLI(Cmd):
         for method in results['methods'].keys():
             #create a method to enable tab completion and pass in method name
             #for rpc call since cmd2 will chomp first string
-            f = partialmethod(self._generic,method)
+            f = partialmethod(self._generic, method)
             # docstring is not available in cmd2
             # f.__doc__ = str(results['methods'][method]['doc'])
             # setattr(f,'__doc__',str(results['methods'][method]['doc']))
-            setattr(ZeroRpcCLI,'do_'+method, f)
+            setattr(ZeroRpcCLI, 'do_'+method, f)
         Cmd.__init__(self)
 
-    def _generic(self,arg,method,*args):
+    def _generic(self, arg, method, *args):
         #TODO arg is being replaced by self due to partial
-        print(self,arg,method,args)
+        print(self, arg, method, args)
         #cmd was sending an empty arg ('',)
         #which was causing signature errors for rpc function
         args = list(filter(None, args))
-        print(self,arg,method,args)
+        print(self, arg, method, args)
         #args not being correctly parsed?
         #all are being passed as stirng in list
         try:
-            args=args[0].split(" ")
+            args = args[0].split(" ")
         except:
             pass
-        print(self,arg,method,args)
+        print(self, arg, method, args)
         result = getattr(self.client, method)(*args)
         print(result)
 
@@ -416,7 +425,7 @@ class MqttCLI(Cmd):
     server. On connection gets list of remote services and dynamically
     generates attributes to allow tab completion.
     """
-    def __init__(self, host,port):
+    def __init__(self, host, port):
         self.allow_cli_args = False
         self.redirector = '--->'
         self.allow_redirection = False
@@ -427,47 +436,47 @@ class MqttCLI(Cmd):
         self.client.on_message = self.on_message
         self.client.connect(self.host, int(self.port), 60)
         #subscribe after connect
-        self.client.subscribe('#',0)
+        self.client.subscribe('#', 0)
         self.client.loop_start()
         Cmd.__init__(self)
 
-    def do_pub(self,arg):
-        topic,payload = arg.split(" ",1)
-        print("topic: '{}'' payload: '{}'".format(topic,payload))
-        self.client.publish(topic,payload)
+    def do_pub(self, arg):
+        topic, payload = arg.split(" ", 1)
+        print("topic: '{}'' payload: '{}'".format(topic, payload))
+        self.client.publish(topic, payload)
 
-    def on_message(self,client, userdata, message):
+    def on_message(self, client, userdata, message):
         print("{} {}".format(message.topic, message.payload.decode()))
 
-def cli_redis(ip,port):
+def cli_redis(ip, port):
 
     print("redis-cli...")
-    subprocess.call(['redis-cli','-h',ip,'-p',str(port)])
+    subprocess.call(['redis-cli', '-h', ip, '-p', str(port)])
 
-def cli_image(ip,port):
+def cli_image(ip, port):
 
     #will try for ~10s to connect
     print("image-cli...")
-    c = ImageCLI(ip,port)
+    c = ImageCLI(ip, port)
     c.cmdloop()
 
-def cli_zerorpc(ip,port):
+def cli_zerorpc(ip, port):
 
     #will try for ~10s to connect
     print("zerorpc-cli...")
-    c = ZeroRpcCLI(ip,port)
+    c = ZeroRpcCLI(ip, port)
     c.cmdloop()
 
-def cli_mqtt(ip,port):
+def cli_mqtt(ip, port):
 
     print("mqtt-cli...")
-    c = MqttCLI(ip,port)
+    c = MqttCLI(ip, port)
     c.cmdloop()
 
-def cli_nomad(ip,port):
+def cli_nomad(ip, port):
 
     print("nomad-cli...")
-    c = NomadCLI(ip,port)
+    c = NomadCLI(ip, port)
     c.cmdloop()
 
 def main():
@@ -475,9 +484,10 @@ def main():
     terminals and repls for different services
     """
 
-    parser = argparse.ArgumentParser(description=main.__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(description=main.__doc__,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("service", default=None, nargs='?', help="service name to connect to")
-    parser.add_argument("--cli", choices=("redis","mqtt","zerorpc","nomad","image"), help="cli type")
+    parser.add_argument("--cli", choices=("redis", "mqtt", "zerorpc", "nomad", "image"), help="cli type")
     parser.add_argument("--info", action='store_true', help="print service info and quit")
 
     args = parser.parse_args()
@@ -487,25 +497,25 @@ def main():
             print("{service:<20}    {ip}:{port}".format(**s))
         return
     elif args.service == "image":
-        ip,port = local_tools.lookup('redis')
-        cli_image(ip,port)
+        ip, port = local_tools.lookup('redis')
+        cli_image(ip, port)
         return
     else:
-        ip,port = local_tools.lookup(args.service)
+        ip, port = local_tools.lookup(args.service)
 
     # info prints formatted strings for copy / paste
     if args.info:
         print("-h {ip} -p {port} \n--port {port} --host {ip}\n{ip}:{port}".format(ip=ip, port=port))
         try:
             zc = zerorpc.Client()
-            zc.connect("tcp://{}:{}".format(ip,port))
+            zc.connect("tcp://{}:{}".format(ip, port))
             results = zc._zerorpc_inspect()
-            for k,v in sorted(results['methods'].items()):
+            for k, v in sorted(results['methods'].items()):
                 # coerce all to strings for formatting
                 v['function'] = k
                 if v['doc']:
-                    v['doc'] = v['doc'].replace("\n"," ")
-                v = {k:str(v) for k,v in v.items()}
+                    v['doc'] = v['doc'].replace("\n", " ")
+                v = {k:str(v) for k, v in v.items()}
                 print("{function:<30}{args:<30}{doc:.20s}".format(**v))
 
         except Exception as ex:
@@ -517,21 +527,21 @@ def main():
 
     if args.service == "redis" or args.cli == "redis":
         try:
-            cli_redis(ip,port)
+            cli_redis(ip, port)
         except Exception as ex:
             print(ex)
-            cli_zerorpc(ip,port)
+            cli_zerorpc(ip, port)
     elif args.service == "nomad" or args.cli == "nomad":
         try:
-            cli_nomad(ip,port)
+            cli_nomad(ip, port)
         except Exception as ex:
             print(ex)
-            cli_zerorpc(ip,port)
+            cli_zerorpc(ip, port)
     elif args.service == "mqtt" or args.cli == "mqtt":
         try:
-            cli_mqtt(ip,port)
+            cli_mqtt(ip, port)
         except Exception as ex:
             print(ex)
-            cli_zerorpc(ip,port)
+            cli_zerorpc(ip, port)
     else:
-        cli_zerorpc(ip,port)
+        cli_zerorpc(ip, port)
