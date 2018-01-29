@@ -110,7 +110,8 @@ def img_rectangle_grid(img,xspacing=100,yspacing=100,upper_left_square=0,lower_r
             if grid_number == upper_left_square:
                 x = col
                 y = row
-            elif grid_number == lower_right_square:
+
+            if grid_number == lower_right_square:
                 x2 = col + xspacing
                 y2 = row + yspacing
 
@@ -168,7 +169,8 @@ def img_rectangle_column(img,xspacing=100,left_column=0,right_column=0):
         if column_number == left_column:
             x = col
             y = 0
-        elif column_number == right_column:
+
+        if column_number == right_column:
             x2 = col + xspacing
             y2 = imgh
 
@@ -218,7 +220,8 @@ def img_rectangle_row(img,yspacing=100,upper_row=0,lower_row=0):
         if row_number == upper_row:
             x = 0
             y = row
-        elif row_number == lower_row:
+
+        if row_number == lower_row:
             x2 = imgw
             y2 = row + yspacing
 
