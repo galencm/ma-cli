@@ -142,6 +142,11 @@ class ImageCLI(Cmd):
 
         self.op_stack = []
         self.pipes = []
+        # create pipe on startup
+        pipe_name = "tmp{}".format(str(uuid.uuid4())).replace("-", "")
+        subprocess.call(["lings-pipe-add", pipe_name, "--expire", "600"])
+        self.pipes.append(pipe_name)
+
         self.prompt = "{}:{}:{}>".format("image", host, port)
 
         img_funcs = []
@@ -238,14 +243,23 @@ class ImageCLI(Cmd):
         self.pipes.append(pipe_name)
 
     def do_pipe_append(self, arg):
-        # pipe_append rotate 90
+        """Append args to pipe in
+        form of call arg1 arg2 arg3..."""
         pipe_name = self.pipes[-1]
         pipe_string = arg
-        subprocess.call(["lings-pipe-modify", pipe_name, pipe_string, "--append"])
-        #pipename, pipe string
+        subprocess.call(["lings-pipe-modify", pipe_name, pipe_string, "--append", "--expire", "600"])
 
     def do_pipe_save(self, arg):
-        pass
+        """Save working pipe by copying
+        to name specified by arg"""
+        pipe_name = self.pipes[-1]
+        print(subprocess.check_output(["lings-pipe-modify",pipe_name,"--copy",arg]).decode())
+
+    def do_pipe_info(self, arg):
+        """Pretty-print pipe
+        """
+        pipe_name = self.pipes[-1]
+        print(subprocess.check_output(["lings-pipe-modify",pipe_name,"--preview"]).decode())
 
     def do_dry_route(self, arg):
         pass
