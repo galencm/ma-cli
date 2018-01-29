@@ -129,7 +129,7 @@ class ImageCLI(Cmd):
     Use generated material for pipes.
     """
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, load_with=None):
         #disable,otherwise argparse parsers in main() will interact poorly
         self.allow_cli_args = False
         self.redirector = '--->'
@@ -146,6 +146,9 @@ class ImageCLI(Cmd):
         pipe_name = "tmp{}".format(str(uuid.uuid4())).replace("-", "")
         subprocess.call(["lings-pipe-add", pipe_name, "--expire", "600"])
         self.pipes.append(pipe_name)
+
+        if load_with:
+            self.do_use(load_with)
 
         self.prompt = "{}:{}:{}>".format("image", host, port)
 
@@ -471,7 +474,7 @@ def cli_image(ip, port):
 
     #will try for ~10s to connect
     print("image-cli...")
-    c = ImageCLI(ip, port)
+    c = ImageCLI(ip, port, "random")
     c.cmdloop()
 
 def cli_zerorpc(ip, port):
