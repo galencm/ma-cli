@@ -142,6 +142,7 @@ class ImageCLI(Cmd):
 
         self.op_stack = []
         self.pipes = []
+        self.routes = []
         # create pipe on startup
         pipe_name = "tmp{}".format(str(uuid.uuid4())).replace("-", "")
         subprocess.call(["lings-pipe-add", pipe_name, "--expire", "600"])
@@ -167,6 +168,9 @@ class ImageCLI(Cmd):
     def __del__(self):
         # close open images and files
         del self.images
+        # if exiting using Ctrl-C:
+        # subprocess to clean routes
+        # does not work here...
 
     def _generic(self, arg, method, *args):
         print(self, arg, method, args)
@@ -177,6 +181,16 @@ class ImageCLI(Cmd):
             pass
         self.images.active_image = getattr(dm, method)(self.images.active_image, *args)
         self.op_stack.append((method, args))
+
+    def do_exit(self,args):
+        # cleanup created routes
+        self.do_route_clean()
+        return True
+
+    def do_quit(self,args):
+        # cleanup created routes
+        self.do_route_clean()
+        return True
 
     def do_use(self, arg):
 
@@ -264,10 +278,36 @@ class ImageCLI(Cmd):
         pipe_name = self.pipes[-1]
         print(subprocess.check_output(["lings-pipe-modify",pipe_name,"--preview"]).decode())
 
+    def do_source_ping(self, arg):
+        """Ping sources for routes
+        """
+        print(subprocess.check_output(["ma-throw","ping","-v"]).decode())
+
+    def do_route_clean(self, arg):
+        """Remove temporary routes
+        """
+        for route in self.routes:
+            print("cleaning: {}".format(route))
+            print(subprocess.check_output(["lings-route-remove", route]).decode())
+
+    def do_route_wireup(self, arg):
+        """Create a route for working pipe
+        """
+        arg = arg.split(" ")
+        route = "if '{source}' do pipe {pipe}".format(source=arg[0],pipe=self.pipes[-1])
+        self.routes.append(route)
+        print(subprocess.check_output(["lings-route-add", route]))
+
     def do_dry_route(self, arg):
-        pass
+        self.do_dry_pipe("wait")
+        # {"key" : self.images.active_image_key}
 
     def do_dry_pipe(self, arg):
+        args = arg.split(" ")
+        if args[0] == "wait":
+            run_pipe_directly = False
+        else:
+            run_pipe_directly = True
 
         # prepare listener for end of pipe message
         q = queue.Queue()
@@ -280,13 +320,14 @@ class ImageCLI(Cmd):
 
         # duplicate hash and send through pipe
         duplicate = dm.duplicate(self.images.active_image_source)
-        # need to pass in env for field/key
-        subprocess.call(["lings-pipe-run",
-                         self.pipes[-1],
-                         duplicate,
-                         "--context",
-                         json.dumps({"key" : self.images.active_image_key})
-                        ])
+        
+        if run_pipe_directly:
+            subprocess.call(["lings-pipe-run",
+                             self.pipes[-1],
+                             duplicate,
+                             "--context",
+                             json.dumps({"key" : self.images.active_image_key})
+                            ])
 
         # get end of pipe message and show result
         post_pipe = q.get()
