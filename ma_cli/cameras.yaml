@@ -1,0 +1,17 @@
+attributes:
+    zoom:
+        name: zoom
+        min: 0
+        max: 10
+        step: 1
+calls:
+    slurp: ma-throw slurp {device}
+    increment: ma-throw set _ {name} {step} +
+    decrement: ma-throw set _ {name} {step} -
+    set: ma-throw set _ {name} {amount}
+bindings:
+    SPACE: slurp
+    UP: increment
+    DOWN: decrement
+    LEFT: cli_previous_attribute
+    RIGHT: cli_next_attribute
