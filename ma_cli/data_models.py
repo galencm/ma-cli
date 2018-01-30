@@ -308,8 +308,6 @@ def view_concatenate(uuids):
                     images.append((*open_img(thing,key=k),fields))
                 except Exception as ex:
                     pass
-    # duplicate for testing
-    images = images + images
 
     border = 50
     landscape_width = sum([img.size[0] + border for img, _, _ in images])
