@@ -35,7 +35,7 @@ def main():
     parser.add_argument("--see-all", action="store_true", help = "dereference all fields and show with display")
     parser.add_argument("--prefix", default= "glworb:", help = "set retrieval prefix for hash/uuid")
     parser.add_argument("--pattern", default= "*", help = "list all matching pattern")
-    parser.add_argument("--modify", nargs='+', default=[], help = "image modifications, a series of quoted strings ie 'img_grid 500 500'")
+    parser.add_argument("--modify", nargs='+', default=[], help = "nonpermanent image modifications, a series of quoted strings ie 'img_grid 500 500'")
 
     args = parser.parse_args()
 
