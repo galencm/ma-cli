@@ -15,17 +15,15 @@ def main():
     data model(s): work with glworbs 
     """
 
-    # TODO extend to hydra data model
-    # call redis-cli for sorting etc...
-    # this displays all glworbs on commandline:
-    # redis-cli -h _ -p _ keys \glworb:*
-    # use here or ma-cli?
     keys = None
     if not sys.stdin.isatty():
         import re
         keys = []
         for line in sys.stdin:
             # match anything that looks like a key?
+            # glworb:123456 | ma-dm <ocr call> <show with overlay>
+            #  ^^ or ma-throw glworb glworb:123456 ocr
+            # glworb_binary:123456 | ma-dm <create-glworb> -> stdout glworb:123456
             quoted_keys = re.findall(r'\'([^]]*)\'', line)
             keys.extend(quoted_keys)
             if not quoted_keys and ":" in line:
@@ -41,8 +39,9 @@ def main():
     args = parser.parse_args()
 
     if keys:
-        for key in keys:
-            data_models.view(key,overlay = "")
+        data_models.view_concatenate(keys)
+        # for key in keys:
+        #     data_models.view(key,overlay = "")
         return
 
     if args.uuid is None:

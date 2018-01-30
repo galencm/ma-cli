@@ -295,6 +295,41 @@ def img_view(img):
     img.show()
     return img
 
+def view_concatenate(uuids):
+
+    images = []
+
+    for thing in uuids:
+        fields = r.hgetall(thing)
+        for k, v in fields.items():
+            if ":" in v:
+                try:
+                    # append (pil image, file object, fields)
+                    images.append((*open_img(thing,key=k),fields))
+                except Exception as ex:
+                    pass
+    # duplicate for testing
+    images = images + images
+
+    border = 50
+    landscape_width = sum([img.size[0] + border for img, _, _ in images])
+    landscape_height = max([img.size[1] for img, _, _ in images])
+    landscape = Image.new('RGBA', (landscape_width, landscape_height))
+
+    offset = 0
+
+    for img, file, fields in images:
+        img = img_overlay(img, pretty_format(fields), 100, 100, 30)
+        landscape.paste(img, (offset, 0))
+        offset += img.size[0] + border
+
+    landscape.show()
+
+    # cleanup
+    for img, file, _ in images:
+        img.close()
+        file.close()
+
 def view(thing_uuid, field=None, overlay="", prefix="", layers=None):
     # ma-throw slurp _ | ma-dm --overlay "rectangle 10 10 100 100 255 255 255 50" "overlay {ocr_result1} 10 10 30"
     env = {}
