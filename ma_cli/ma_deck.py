@@ -63,8 +63,13 @@ def input_loop(bindings):
                     except Exception as ex:
                         print(type(ex).__name__, ex)
                         call_formatted = prepare(bindings['calls'][call], bindings, active_attribute)
-                        # print(call_formatted.split(" "))
-                        print(subprocess.check_output(call_formatted.split(" ")).decode())
+                        # if pipe in string, use shell=True
+                        # problematic since yaml could be any
+                        # string
+                        if "|" in call_formatted:
+                            print(subprocess.check_output(call_formatted,shell=True).decode())
+                        else:
+                            print(subprocess.check_output(call_formatted.split(" ")).decode())
                 except Exception as ex:
                     print(type(ex).__name__, ex)
             except KeyError:

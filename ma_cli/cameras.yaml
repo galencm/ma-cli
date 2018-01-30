@@ -6,11 +6,13 @@ attributes:
         step: 1
 calls:
     slurp: ma-throw slurp {device}
+    slurp-view: ma-throw slurp {device} | ma-dm
     increment: ma-throw set _ {name} {step} +
     decrement: ma-throw set _ {name} {step} -
     set: ma-throw set _ {name} {amount}
 bindings:
-    SPACE: slurp
+    SPACE: slurp-view
+    s: slurp
     UP: increment
     DOWN: decrement
     LEFT: cli_previous_attribute
