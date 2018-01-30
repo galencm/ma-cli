@@ -435,6 +435,10 @@ class NomadCLI(Cmd):
         subs = {k : v for k, v in locals().items() if not k == 'self'}
         self.call_scheduler("nomad stop {address} {job_name}", subs)
 
+    def do_restart(self, job_name):
+        self.do_stop(job_name)
+        self.do_start(job_name)
+
     def do_purge(self, job_name):
         subs = {k : v for k, v in locals().items() if not k == 'self'}
         self.call_scheduler("nomad stop -purge {address} {job_name}", subs)
