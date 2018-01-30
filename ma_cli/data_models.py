@@ -295,7 +295,7 @@ def img_view(img):
     img.show()
     return img
 
-def view_concatenate(uuids):
+def view_concatenate(uuids, modifications):
 
     images = []
 
@@ -317,6 +317,12 @@ def view_concatenate(uuids):
     offset = 0
 
     for img, file, fields in images:
+        for m in modifications:
+            m = m.split(" ")
+            try:
+                img = globals()[m[0]](img, *m[1:])
+            except Exception as ex:
+                print(ex)
         img = img_overlay(img, pretty_format(fields), 100, 100, 30)
         landscape.paste(img, (offset, 0))
         offset += img.size[0] + border

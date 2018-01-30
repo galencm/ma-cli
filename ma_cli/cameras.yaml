@@ -6,7 +6,7 @@ attributes:
         step: 1
 calls:
     slurp: ma-throw slurp {device}
-    slurp-view: ma-throw slurp {device} | ma-dm
+    slurp-view: ma-throw slurp {device} | ma-dm --modify "img_grid 500 500"
     increment: ma-throw set _ {name} {step} +
     decrement: ma-throw set _ {name} {step} -
     set: ma-throw set _ {name} {amount}
