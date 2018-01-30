@@ -16,19 +16,28 @@ class Default(dict):
         #return "{"+key+"}"
         return "_"
 
-def bind(yaml_file):
+def bind(yaml_files):
     bound = {}
+    configuration = {}
     yaml = YAML(typ='safe')
-    conf = yaml.load(pathlib.Path(yaml_file))
-    for key,call in conf['bindings'].items():
-        if len(key) > 1:
-            curtsie_key = "<{}>".format(key)
-        else:
-            curtsie_key = key
-        bound[curtsie_key] = call
 
-    conf['bound'] = bound
-    return conf
+    for file in yaml_files:
+        print("loading yaml from {}".format(file))
+        conf = yaml.load(pathlib.Path(file))
+        for key,call in conf['bindings'].items():
+            if len(key) > 1:
+                curtsie_key = "<{}>".format(key)
+            else:
+                curtsie_key = key
+            bound[curtsie_key] = call
+        try:
+            configuration['bound'].update(bound)
+        except KeyError:
+            configuration['bound'] = bound
+
+        configuration.update(conf)
+
+    return configuration
 
 def cli_previous_attribute(configuration):
     print("previous")
@@ -82,8 +91,16 @@ def main():
 
     parser = argparse.ArgumentParser(description=main.__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--yaml", nargs='+', default=[], help = "yaml files to use for configuration and binding")
     args = parser.parse_args()
-    # load .yaml included in package
-    yaml = pathlib.PurePath(pathlib.Path(__file__).parents[0], 'cameras.yaml')
+
+    if not args.yaml:
+        yaml = [pathlib.PurePath(pathlib.Path(__file__).parents[0], 'cameras.yaml')]
+        print("using default: {}".format(yaml))
+    else:
+        yaml = []
+        for file in args.yaml:
+            yaml.append(pathlib.PurePath(file))
+
     input_loop(bind(yaml))
 
