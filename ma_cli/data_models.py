@@ -58,6 +58,19 @@ def enumerate_data(pattern):
 
     return list(r.scan_iter(match=pattern))
 
+def sort_by(pattern, field):
+
+    field_values = []
+    for key in r.scan_iter(match=pattern):
+        try:
+            value = r.hget(key, field)
+            if value:
+                field_values.append((key, value))
+        except Exception as ex:
+            print(ex)
+
+    return sorted(field_values, key=lambda x: x[1])
+
 def service_connection():
 
     return (r_ip,r_port)

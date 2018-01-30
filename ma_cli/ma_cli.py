@@ -212,6 +212,8 @@ class ImageCLI(Cmd):
 
         if image_uuid == 'random':
             image_uuid = random.choice(dm.enumerate_data(pattern=pattern))
+        elif image_uuid == 'latest':
+            image_uuid = dm.sort_by(pattern, "created")[-1][0]
 
         self.images.clear()
         self.images.add_img(image_uuid)
@@ -527,7 +529,7 @@ def cli_image(ip, port):
 
     #will try for ~10s to connect
     print("image-cli...")
-    c = ImageCLI(ip, port, "random")
+    c = ImageCLI(ip, port, "latest")
     c.cmdloop()
 
 def cli_zerorpc(ip, port):
