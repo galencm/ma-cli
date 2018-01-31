@@ -67,7 +67,7 @@ def main():
         data_model =  data_models.pretty_format(data_thing, args.uuid)
         general_prefix = args.prefix.strip(":")
         for k,v in data_thing.items():
-            if general_prefix in v:
+            if general_prefix in v or "binary:" in v or "_key" in k:
                 data_models.view(args.uuid,
                                 k,
                                 overlay = data_model_string,

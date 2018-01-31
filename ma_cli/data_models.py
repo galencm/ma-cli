@@ -412,6 +412,9 @@ def duplicate(thing_uuid,ttl=600):
         # so they can be modified by
         # pipes
         for k,v in hashes.items():
+            # need better or more consistent
+            # method for discovering referenced
+            # keys
             if "key" in k and ":" in v:
                 hashes[k] = duplicate(v)
                 print("updating reference hash: {} to {}".format(v,hashes[k]))
