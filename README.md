@@ -30,13 +30,15 @@ ma-throw slurp | lings-route-gather --collect 2 --pattern glworb:* | uniq | ma-d
 * ma-deck: bind stuff, press stuff, throw code, set state
     ```
     $ ma-deck -h
-    usage: ma-deck [-h]
+    usage: ma-deck [-h] [--yaml YAML [YAML ...]]
 
         bind stuff, press stuff, throw code, set state
 
 
     optional arguments:
-      -h, --help  show this help message and exit
+      -h, --help            show this help message and exit
+      --yaml YAML [YAML ...]
+                            yaml files to use for configuration and binding
     ```
 
 * ma-dm: inspect stuff
