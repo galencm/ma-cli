@@ -4,10 +4,10 @@ _a collection of higher-level commandline tools for the machinic ecosystem_
 
 **An example:**
 
-Slurp from a source and view the output after it has been processed by a pipe:
 ```
 ma-throw slurp | lings-route-gather --collect 2 --pattern glworb:* | uniq | ma-dm
 ```
+Slurps from source(s) and views the output after it has been processed by a pipe...
 
 * ma-cli: terminals for stuff
     ```
