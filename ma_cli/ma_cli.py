@@ -16,6 +16,7 @@ import redis
 from cmd2 import Cmd
 import paho.mqtt.client as mosquitto
 import zerorpc
+from PIL import Image
 from ma_cli import local_tools
 from ma_cli import data_models as dm
 
@@ -179,8 +180,14 @@ class ImageCLI(Cmd):
             args = args[0].split(" ")
         except:
             pass
-        self.images.active_image = getattr(dm, method)(self.images.active_image, *args)
-        self.op_stack.append((method, args))
+
+        result = getattr(dm, method)(self.images.active_image, *args)
+
+        if isinstance(result, Image.Image):
+            self.images.active_image = result
+            self.op_stack.append((method, args))
+        else:
+            self.op_stack.append((method, args, result))
 
     def do_exit(self,args):
         # cleanup created routes

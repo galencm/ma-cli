@@ -107,7 +107,10 @@ def img_rotate(img,rotation):
     img = img.rotate(rotation, expand=1)
     return img
 
-def img_rectangle_grid(img,xspacing=100,yspacing=100,upper_left_square=0,lower_right_square=0):
+def img_geometry_rectangle_grid(img,xspacing=100,yspacing=100,upper_left_square=0,lower_right_square=0,geometry_only=True):
+    return img_rectangle_grid(img, xspacing, yspacing, upper_left_square, lower_right_square, geometry_only)
+
+def img_rectangle_grid(img,xspacing=100,yspacing=100,upper_left_square=0,lower_right_square=0,geometry_only=False):
     xspacing = int(xspacing)
     yspacing = int(yspacing)
     upper_left_square = int(upper_left_square)
@@ -133,7 +136,10 @@ def img_rectangle_grid(img,xspacing=100,yspacing=100,upper_left_square=0,lower_r
     print(x,y,x2-x,y2-y)
     img = img_rectangle(img,x,y,x2-x,y2-y)
 
-    return img
+    if geometry_only is True:
+        return (x,y,x2-x,y2-y)
+    else:
+        return img
 
 def img_grid(img,xspacing=100,yspacing=100,r=255,g=255,b=255,a=127,label=True,**kwargs):
     xspacing = int(xspacing)
@@ -168,7 +174,10 @@ def img_grid(img,xspacing=100,yspacing=100,r=255,g=255,b=255,a=127,label=True,**
     #del draw
     return img
 
-def img_rectangle_column(img,xspacing=100,left_column=0,right_column=0):
+def img_geometry_rectangle_column(img,xspacing=100,left_column=0,right_column=0,geometry_only=True):
+    return img_rectangle_column(img,xspacing,left_column,right_column,geometry_only)
+
+def img_rectangle_column(img,xspacing=100,left_column=0,right_column=0,geometry_only=False):
     xspacing = int(xspacing)
     left_column = int(left_column)
     right_column = int(right_column)
@@ -192,7 +201,10 @@ def img_rectangle_column(img,xspacing=100,left_column=0,right_column=0):
     print(x,y,x2-x,y2-y)
     img = img_rectangle(img,x,y,x2-x,y2-y)
 
-    return img
+    if geometry_only is True:
+        return (x,y,x2-x,y2-y)
+    else:
+        return img
 
 def img_column(img,xspacing=100,r=255,g=255,b=255,a=127,label=True,**kwargs):
     xspacing = int(xspacing)
@@ -219,7 +231,10 @@ def img_column(img,xspacing=100,r=255,g=255,b=255,a=127,label=True,**kwargs):
 
     return img
 
-def img_rectangle_row(img,yspacing=100,upper_row=0,lower_row=0):
+def img_geometry_rectangle_row(img, yspacing=100, upper_row=0, lower_row=0, geometry_only=True):
+    return img_rectangle_row(img, yspacing, upper_row, lower_row, geometry_only)
+
+def img_rectangle_row(img,yspacing=100,upper_row=0,lower_row=0,geometry_only=False):
     yspacing = int(yspacing)
     upper_row = int(upper_row)
     lower_row = int(lower_row)
@@ -243,7 +258,10 @@ def img_rectangle_row(img,yspacing=100,upper_row=0,lower_row=0):
     print(x,y,x2-x,y2-y)
     img = img_rectangle(img,x,y,x2-x,y2-y)
 
-    return img
+    if geometry_only is True:
+        return (x,y,x2-x,y2-y)
+    else:
+        return img
 
 def img_row(img,yspacing=100,r=255,g=255,b=255,a=127,label=True,**kwargs):
     yspacing = int(yspacing)
@@ -270,7 +288,10 @@ def img_row(img,yspacing=100,r=255,g=255,b=255,a=127,label=True,**kwargs):
 
     return img
 
-def img_rectangle(img, x, y, w, h, r=255,g=255,b=255,a=127,**kwargs):
+def img_geometry_rectangle(img, x, y, w, h, r=255,g=255,b=255,a=127,geometry_only=True):
+    return img_rectangle(img, x, y, w, h, r, g, b, a, geometry_only)
+
+def img_rectangle(img, x, y, w, h, r=255,g=255,b=255,a=127,geometry_only=False,**kwargs):
     x = int(x)
     y = int(y)
     w = int(w)
@@ -286,7 +307,10 @@ def img_rectangle(img, x, y, w, h, r=255,g=255,b=255,a=127,**kwargs):
     draw.rectangle((x,y,x+w,y+h),(r,g,b,a))
     img = Image.alpha_composite(img, overlay)
     # return img otherwise composite is not visible
-    return img
+    if geometry_only is True:
+        return (x,y,x+w,y+h)
+    else:
+        return img
 
 def img_overlay(img, text, x, y, fontsize, substitions={},**kwargs):
     x = int(x)
