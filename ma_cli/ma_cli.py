@@ -260,9 +260,9 @@ class ImageCLI(Cmd):
     def do_ops(self, arg):
 
         for op_num, op in enumerate(self.op_stack):
-            print("{:<5}{}".format(op_num, "{} {}".format(op[0], ' '.join(op[1]))))
+            print("{:<5}{}".format(op_num, "{} {}".format(op[0], op[1:])))
 
-    def do_pipe(self, arg):
+    def do_pipe_(self, arg):
         # create anonymous temporary pipe, no dashes in name
         pipe_name = "tmp{}".format(str(uuid.uuid4())).replace("-", "")
         subprocess.call(["lings-pipe-add", pipe_name, "--expire", "600"])
@@ -278,8 +278,14 @@ class ImageCLI(Cmd):
     def do_pipe_save(self, arg):
         """Save working pipe by copying
         to name specified by arg"""
+
         pipe_name = self.pipes[-1]
-        print(subprocess.check_output(["lings-pipe-modify",pipe_name,"--copy",arg]).decode())
+        new_name = arg
+        print(subprocess.check_output(["lings-pipe-modify", pipe_name, "--copy", new_name]).decode())
+
+        # save route with pipe
+        if self.routes:
+            self.do_route_wireup(self.routes[-1]['source'], pipe=new_name)
 
     def do_pipe_info(self, arg):
         """Pretty-print pipe
@@ -297,15 +303,22 @@ class ImageCLI(Cmd):
         """
         for route in self.routes:
             print("cleaning: {}".format(route))
-            print(subprocess.check_output(["lings-route-remove", route]).decode())
+            print(subprocess.check_output(["lings-route-remove", route['route']]).decode())
 
-    def do_route_wireup(self, arg):
+    def do_route_wireup(self, arg, pipe=None):
         """Create a route for working pipe
         """
         arg = arg.split(" ")
-        route = "if '{source}' do pipe {pipe} keyzzzz{key}".format(source=arg[0],pipe=self.pipes[-1],key=self.images.active_image_key)
-        self.routes.append(route)
+
+        if pipe is None:
+            pipe = self.pipes[-1]
+
+        route = "if '{source}' do pipe {pipe} keyzzzz{key}".format(source=arg[0], pipe=pipe, key=self.images.active_image_key)
         print(subprocess.check_output(["lings-route-add", route]))
+
+        #if tmp pipe, cleanup route on exit
+        if "tmp" in self.pipes[-1]:
+            self.routes.append({"route": route,"source":arg[0]})
 
     def do_dry_route(self, arg):
         """ Dry run of testing route and pipe
