@@ -389,7 +389,7 @@ def img_rectangle(
     else:
         return img
 
-def img_overlay(img, text, x, y, fontsize, substitions=None, **kwargs):
+def img_overlay(img, text, x, y, fontsize, substitutions=None, **kwargs):
     if substitutions is None:
         substitutions = {}
     x = int(x)
