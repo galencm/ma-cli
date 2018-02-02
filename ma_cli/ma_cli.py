@@ -52,7 +52,7 @@ class ImageFiler(object):
         fields = dm.retrieve(source)
         for k, v in fields.items():
             if ":" in v:
-                print("trying to load key: {} value: {} as image".format(k, v))
+                print("trying to load key: {} value: {} as image".format(k, repr(v)))
                 try:
                     self.images[source][k] = ImageFile(*dm.open_img(source, key=k), k)
 
@@ -243,9 +243,9 @@ class ImageCLI(Cmd):
 
         for k, v in self.images.metadata.items():
             if "binary" in v and ":" in v and terminal_colors:
-                pretty_string += "{:<30}{}{}{}".format(k, color_green, v, color_end)
+                pretty_string += "{:<30}{}{}{}".format(k, color_green, repr(v), color_end)
             else:
-                pretty_string += "{:<30}{}".format(k, v)
+                pretty_string += "{:<30}{}".format(k, repr(v))
 
             if k == self.images.active_image_key:
                 pretty_string += " * (active)"
