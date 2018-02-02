@@ -365,6 +365,9 @@ class ImageCLI(Cmd):
         print("post pipe: {}".format(post_pipe))
         dm.view(post_pipe, field=self.images.active_image_key)
 
+        for k, v in r.hgetall(post_pipe).items():
+            print("{:<30}{}".format(k, repr(v)))
+
     def listen_pipe_finish(self, channel, redis_conn, q):
 
         pubsub = redis_conn.pubsub()
