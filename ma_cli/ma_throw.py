@@ -61,5 +61,9 @@ def main():
         elif args.verbose:
             return
         else:
-            sys.stdout.write(str(results))
-            return results
+            for result in results:
+                sys.stdout.write(str(result))
+                sys.stdout.flush()
+
+            # sys.stdout.write(str(results))
+            # return results
