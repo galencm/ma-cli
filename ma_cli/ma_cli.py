@@ -262,6 +262,18 @@ class ImageCLI(Cmd):
         for op_num, op in enumerate(self.op_stack):
             print("{:<5}{}".format(op_num, "{} {}".format(op[0], op[1:])))
 
+    def do_highlight_regions(self, arg):
+        for k, v in self.images.metadata.items():
+            if "region_" in k or "ocr-rectangle" in k:
+                # region_ocr-rectangle_{key}
+                geometry = [int(float(x)) for x in v.split(",")]
+                caption = k.split("_",2)
+                # 0's are being incorrectly filtered in _generic
+                color_geometry = geometry + [255, 1, 1]
+                self.do_rectangle(*color_geometry)
+                # label the region
+                self.do_overlay(*[k, color_geometry[0], color_geometry[1], 20])
+
     def do_pipe_(self, arg):
         # create anonymous temporary pipe, no dashes in name
         pipe_name = "tmp{}".format(str(uuid.uuid4())).replace("-", "")
