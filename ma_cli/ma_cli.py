@@ -280,6 +280,16 @@ class ImageCLI(Cmd):
         subprocess.call(["lings-pipe-add", pipe_name, "--expire", "600"])
         self.pipes.append(pipe_name)
 
+    def do_pipe_use(self, arg):
+        """use an existing pipe
+        """
+        pipe_name = arg
+        pipe_exists = subprocess.check_output(["lings-pipe-get", pipe_name]).decode()
+        if "None" in pipe_exists:
+            print("Pipe does not exist")
+        else:
+            self.pipes.append(pipe_name)
+
     def do_pipe_append(self, arg):
         """Append args to pipe in
         form of call arg1 arg2 arg3..."""
