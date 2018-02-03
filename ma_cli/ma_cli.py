@@ -305,6 +305,9 @@ class ImageCLI(Cmd):
         pipe_name = self.pipes[-1]
         print(subprocess.check_output(["lings-pipe-modify",pipe_name,"--preview"]).decode())
 
+    def do_pipe_dryrun(self, arg):
+        self.do_dry_pipe(arg)
+
     def do_source_ping(self, arg):
         """Ping sources for routes
         """
