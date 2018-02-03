@@ -174,13 +174,13 @@ class ImageCLI(Cmd):
         # does not work here...
 
     def _generic(self, arg, method, *args):
-        print(self, arg, method, args)
         args = list(filter(None, args))
-        try:
-            args = args[0].split(" ")
-        except:
-            pass
-
+        if len(args) == 1:
+            try:
+                args = args[0].split(" ")
+            except Exception as ex:
+                print(ex)
+                pass
         result = getattr(dm, method)(self.images.active_image, *args)
 
         if isinstance(result, Image.Image):
