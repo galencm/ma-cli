@@ -148,6 +148,8 @@ class ImageCLI(Cmd):
         pipe_name = "tmp{}".format(str(uuid.uuid4())).replace("-", "")
         subprocess.call(["lings-pipe-add", pipe_name, "--expire", "600"])
         self.pipes.append(pipe_name)
+        # set it to be the default pipe
+        self.active_pipe = self.pipes[-1]
 
         if load_with:
             self.do_use(load_with)
@@ -274,7 +276,7 @@ class ImageCLI(Cmd):
                 # label the region
                 self.do_overlay(*[k, color_geometry[0], color_geometry[1], 20])
 
-    def do_pipe_(self, arg):
+    def do_pipe_tmp(self, arg):
         # create anonymous temporary pipe, no dashes in name
         pipe_name = "tmp{}".format(str(uuid.uuid4())).replace("-", "")
         subprocess.call(["lings-pipe-add", pipe_name, "--expire", "600"])
@@ -284,16 +286,24 @@ class ImageCLI(Cmd):
         """use an existing pipe
         """
         pipe_name = arg
-        pipe_exists = subprocess.check_output(["lings-pipe-get", pipe_name]).decode()
-        if "None" in pipe_exists:
-            print("Pipe does not exist")
-        else:
-            self.pipes.append(pipe_name)
+        if not pipe_name in self.pipes:
+            pipe_exists = subprocess.check_output(["lings-pipe-get", pipe_name]).decode()
+            if "None" in pipe_exists:
+                print("Pipe does not exist")
+            else:
+                self.pipes.append(pipe_name)
+                self.active_pipe = pipe_name
+        elif pipe_name in self.pipes:
+            self.active_pipe = pipe_name
+
+    def do_pipe_using(self, arg):
+        for pipe in self.pipes:
+            print("{}".format("*  "+pipe if self.active_pipe == pipe else "  "+pipe))
 
     def do_pipe_append(self, arg):
         """Append args to pipe in
         form of call arg1 arg2 arg3..."""
-        pipe_name = self.pipes[-1]
+        pipe_name = self.active_pipe
         pipe_string = arg
         subprocess.call(["lings-pipe-modify", pipe_name, pipe_string, "--append", "--expire", "600"])
 
@@ -301,7 +311,7 @@ class ImageCLI(Cmd):
         """Save working pipe by copying
         to name specified by arg"""
 
-        pipe_name = self.pipes[-1]
+        pipe_name = self.active_pipe
         new_name = arg
         print(subprocess.check_output(["lings-pipe-modify", pipe_name, "--copy", new_name]).decode())
 
@@ -312,7 +322,10 @@ class ImageCLI(Cmd):
     def do_pipe_info(self, arg):
         """Pretty-print pipe
         """
-        pipe_name = self.pipes[-1]
+        if arg == '':
+            pipe_name = self.active_pipe
+        else:
+            pipe_name = arg
         print(subprocess.check_output(["lings-pipe-modify",pipe_name,"--preview"]).decode())
 
     def do_pipe_dryrun(self, arg):
@@ -336,13 +349,13 @@ class ImageCLI(Cmd):
         arg = arg.split(" ")
 
         if pipe is None:
-            pipe = self.pipes[-1]
+            pipe = self.active_pipe
 
         route = "if '{source}' do pipe {pipe} keyzzzz{key}".format(source=arg[0], pipe=pipe, key=self.images.active_image_key)
         print(subprocess.check_output(["lings-route-add", route]))
 
         #if tmp pipe, cleanup route on exit
-        if "tmp" in self.pipes[-1]:
+        if "tmp" in self.active_pipe:
             self.routes.append({"route": route,"source":arg[0]})
 
     def do_dry_route(self, arg):
@@ -365,7 +378,7 @@ class ImageCLI(Cmd):
         q = queue.Queue()
         r_ip, r_port = local_tools.lookup('redis')
         r = redis.StrictRedis(host=r_ip, port=str(r_port), decode_responses=True)
-        channel = "/pipe/{}/completed".format(self.pipes[-1])
+        channel = "/pipe/{}/completed".format(self.active_pipe)
         print("channel: {}".format(channel))
         t = threading.Thread(target=self.listen_pipe_finish, args=(channel, r, q))
         t.start()
@@ -375,7 +388,7 @@ class ImageCLI(Cmd):
         
         if run_pipe_directly:
             subprocess.call(["lings-pipe-run",
-                             self.pipes[-1],
+                             self.active_pipe,
                              duplicate,
                              "--context",
                              json.dumps({"key" : self.images.active_image_key})
