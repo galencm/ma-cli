@@ -53,8 +53,8 @@ def enumerate_data(pattern):
 
     # terminal equivalent $ redis-cli -h {ip} -p {port} keys {pattern}
 
-    for key in redis_conn.scan_iter(match=pattern):
-        print(key)
+    # for key in redis_conn.scan_iter(match=pattern):
+    #     print(key)
 
     return list(redis_conn.scan_iter(match=pattern))
 
