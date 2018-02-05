@@ -49,6 +49,19 @@ def open_image(address_uuid, key=None):
     #binary_r.set(bytes_key, file.read())
     file.close()
 
+def filter_data(filter_key,pattern):
+
+    data = enumerate_data(pattern=pattern)
+    data_filtered = []
+    for d in data:
+        has_key = redis_conn.hget(d, filter_key)
+        if has_key:
+            data_filtered.append((d, has_key))
+    data_filtered = sorted(data_filtered, key=lambda x: x[1])
+    data = [d[0] for d in data_filtered]
+
+    return data
+
 def enumerate_data(pattern):
 
     # terminal equivalent $ redis-cli -h {ip} -p {port} keys {pattern}
