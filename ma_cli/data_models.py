@@ -86,6 +86,20 @@ def filter_data(filter_key,pattern):
 
     return data
 
+def filter_data_to_dict(filter_key,pattern):
+
+    data = enumerate_data(pattern=pattern)
+    data_filtered = {}
+    for d in data:
+        has_key = redis_conn.hget(d, filter_key)
+        if has_key:
+            if not has_key in data_filtered:
+                data_filtered[has_key] = []
+            data_filtered[has_key].append(d)
+
+    data = data_filtered
+    return data
+
 def enumerate_data(pattern):
 
     # terminal equivalent $ redis-cli -h {ip} -p {port} keys {pattern}
