@@ -36,9 +36,9 @@ def main():
     parser.add_argument("--prefix", default= "glworb:", help = "set retrieval prefix for hash/uuid")
     parser.add_argument("--pattern", default= "*", help = "list all matching pattern")
     parser.add_argument("--modify", nargs='+', default=[], help = "nonpermanent image modifications, a series of quoted strings ie 'img_grid 500 500'")
-    parser.add_argument("--add-field", help = "add field to all matching ---pattern")
+    parser.add_argument("--add-field", help = "add empty field to all matching ---pattern")
     parser.add_argument("--remove-field", help = "remove field from all matching ---pattern")
-    parser.add_argument("--field-values", nargs='+', default=[], help = "list of values to be randomly added to --add-field")
+    parser.add_argument("--field-values", nargs='+', default=[], help = "list of values to be randomly selected as value to field created by --add-field")
 
     args = parser.parse_args()
 
