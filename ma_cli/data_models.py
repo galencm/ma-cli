@@ -7,6 +7,7 @@
 import io
 import subprocess
 import uuid
+import random
 from contextlib import contextmanager
 import redis
 from PIL import Image, ImageDraw, ImageFont, ImageShow
@@ -48,6 +49,29 @@ def open_image(address_uuid, key=None):
     file.seek(0)
     #binary_r.set(bytes_key, file.read())
     file.close()
+
+def add_field(field_name, uuids, values=None):
+
+    if not values:
+        values = [""]
+
+    modified = []
+    for u in uuids:
+        print("?????",u)
+        redis_conn.hset(u, field_name, random.choice(values))
+        modified.append(u)
+
+    return modified
+
+def remove_field(field_name, uuids):
+
+    modified = []
+
+    for u in uuids:
+        redis_conn.hdel(u, field_name)
+        modified.append(u)
+
+    return modified
 
 def filter_data(filter_key,pattern):
 

@@ -36,6 +36,9 @@ def main():
     parser.add_argument("--prefix", default= "glworb:", help = "set retrieval prefix for hash/uuid")
     parser.add_argument("--pattern", default= "*", help = "list all matching pattern")
     parser.add_argument("--modify", nargs='+', default=[], help = "nonpermanent image modifications, a series of quoted strings ie 'img_grid 500 500'")
+    parser.add_argument("--add-field", help = "add field to all matching ---pattern")
+    parser.add_argument("--remove-field", help = "remove field from all matching ---pattern")
+    parser.add_argument("--field-values", nargs='+', default=[], help = "list of values to be randomly added to --add-field")
 
     args = parser.parse_args()
 
@@ -46,8 +49,15 @@ def main():
         return
 
     if args.uuid is None:
-        data_models.enumerate_data(args.pattern)
-        return
+        if args.add_field:
+            print(data_models.add_field(args.add_field, data_models.enumerate_data(args.pattern),values=args.field_values))
+            return
+        elif args.remove_field:
+            print(data_models.remove_field(args.remove_field, data_models.enumerate_data(args.pattern)))
+            return
+        else:
+            data_models.enumerate_data(args.pattern)
+            return
 
     # chomp prefix from uuid if necessary
     if args.uuid.startswith(args.prefix):
