@@ -45,21 +45,33 @@ Slurps from source(s) and views the output after it has been processed by a pipe
     ```
     $ ma-dm -h
     usage: ma-dm [-h] [--see SEE] [--see-all] [--prefix PREFIX]
-                 [--pattern PATTERN]
+                 [--pattern PATTERN] [--modify MODIFY [MODIFY ...]]
+                 [--add-field ADD_FIELD] [--remove-field REMOVE_FIELD]
+                 [--field-values FIELD_VALUES [FIELD_VALUES ...]]
                  [uuid]
 
         data model(s): work with glworbs
 
 
     positional arguments:
-      uuid               hash or uuid of thing
+      uuid                  hash or uuid of thing
 
     optional arguments:
-      -h, --help         show this help message and exit
-      --see SEE          field to dereference and show
-      --see-all          dereference all fields and show with display
-      --prefix PREFIX    set retrieval prefix for hash/uuid
-      --pattern PATTERN  list all matching pattern
+      -h, --help            show this help message and exit
+      --see SEE             field to dereference and show
+      --see-all             dereference all fields and show with display
+      --prefix PREFIX       set retrieval prefix for hash/uuid
+      --pattern PATTERN     list all matching pattern
+      --modify MODIFY [MODIFY ...]
+                            nonpermanent image modifications, a series of quoted
+                            strings ie 'img_grid 500 500'
+      --add-field ADD_FIELD
+                            add empty field to all matching ---pattern
+      --remove-field REMOVE_FIELD
+                            remove field from all matching ---pattern
+      --field-values FIELD_VALUES [FIELD_VALUES ...]
+                            list of values to be randomly selected as value to
+                            field created by --add-field
     ```
 
 * ma-throw: throw stuff and see what responds
