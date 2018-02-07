@@ -57,7 +57,6 @@ def add_field(field_name, uuids, values=None):
 
     modified = []
     for u in uuids:
-        print("?????",u)
         redis_conn.hset(u, field_name, random.choice(values))
         modified.append(u)
 
