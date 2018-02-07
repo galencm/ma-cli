@@ -63,6 +63,20 @@ def add_field(field_name, uuids, values=None):
 
     return modified
 
+def range_field(field_name, uuids):
+
+    # roman / other numerals ?
+    increment = 0
+    step = 1
+    modified = []
+
+    for i, u in enumerate(uuids):
+        redis_conn.hset(u, field_name, increment)
+        increment += step
+        modified.append(u)
+
+    return modified
+
 def remove_field(field_name, uuids):
 
     modified = []

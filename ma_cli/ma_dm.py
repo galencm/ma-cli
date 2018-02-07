@@ -39,6 +39,7 @@ def main():
     parser.add_argument("--add-field", help = "add empty field to all matching ---pattern")
     parser.add_argument("--remove-field", help = "remove field from all matching ---pattern")
     parser.add_argument("--field-values", nargs='+', default=[], help = "list of values to be randomly selected as value to field created by --add-field")
+    parser.add_argument("--field-range", help = "populate field of all matching --pattern with increasing integers 1, 2, 3...")
 
     args = parser.parse_args()
 
@@ -54,6 +55,9 @@ def main():
             return
         elif args.remove_field:
             print(data_models.remove_field(args.remove_field, data_models.enumerate_data(args.pattern)))
+            return
+        elif args.field_range:
+            print(data_models.range_field(args.field_range, data_models.enumerate_data(args.pattern)))
             return
         else:
             data_models.enumerate_data(args.pattern)
