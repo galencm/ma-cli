@@ -100,7 +100,7 @@ def filter_data(filter_key,pattern):
 
     return data
 
-def filter_data_to_dict(filter_key,pattern):
+def filter_data_to_dict(filter_key,pattern,subsort=None):
 
     data = enumerate_data(pattern=pattern)
     data_filtered = {}
@@ -109,7 +109,19 @@ def filter_data_to_dict(filter_key,pattern):
         if has_key:
             if not has_key in data_filtered:
                 data_filtered[has_key] = []
-            data_filtered[has_key].append(d)
+
+            if subsort:
+                data_filtered[has_key].append((d,redis_conn.hget(d, subsort)))
+            else:
+                data_filtered[has_key].append(d)
+
+    if subsort:
+        for key in data_filtered.keys():
+            try:
+                subsorted = sorted(data_filtered[key], key=lambda x: int(x[1]))
+            except Exception as ex:
+                subsorted = sorted(data_filtered[key], key=lambda x: x[1])
+            data_filtered[key] = [d[0] for d in subsorted]
 
     data = data_filtered
     return data
