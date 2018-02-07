@@ -439,29 +439,65 @@ class NomadCLI(Cmd):
     def call_scheduler(self, call_string, subs, raw=False):
         subs.update({"address" : self.scheduler_address})
         call_string = call_string.format(**subs)
-        output = subprocess.check_output(call_string.split(" ")).decode()
-        print(output)
-        if raw:
+        output = subprocess.check_output(call_string.split(" "), stderr=subprocess.STDOUT).decode()
+        if raw is False:
+            print(output)
+            return None
+        elif raw is True:
             return output
         return None
 
     def do_status(self, args):
         self.call_scheduler("nomad status {address}", {})
 
-    def do_logs(self, job_id):
-        subs = {k : v for k, v in locals().items() if not k == 'self'}
-        retry_with_id = False
+    def do_metalogs(self, args):
         try:
-            self.call_scheduler("nomad logs {address} {job_id}", subs)
-            self.call_scheduler("nomad logs -stderr {address} {job_id}", subs)
+            tail_lines = int(args)
+        except:
+            tail_lines = 5
+
+        jobs_status = self.call_scheduler("nomad status {address}", {},raw=True)
+        jobs = []
+        id_line = False
+        for line in jobs_status.split("\n"):
+            if id_line:
+                jobs.append(line.split(" ", 1)[0])
+            if "ID" in line:
+                id_line = True
+
+        jobs = [j for j in jobs if j]
+
+        for job in jobs:
+            self.do_logs(" ".join([job, str(tail_lines)]))
+
+
+    def do_logs(self, args):
+        args = args.split(" ")
+        job_id = args[0]
+        try:
+            tail_lines = int(args[1])
+        except:
+            tail_lines = None
+
+        subs = {k : v for k, v in locals().items() if not k == 'self'}
+        retry_with_id = True
+        try:
+            if tail_lines:
+                print("\n".join(self.call_scheduler("nomad logs {address} {job_id}", subs, raw=True).split("\n")[-tail_lines:]))
+                print("\n".join(self.call_scheduler("nomad logs -stderr {address} {job_id}", subs, raw=True).split("\n")[-tail_lines:]))
+                return
+            else:
+                self.call_scheduler("nomad logs {address} {job_id}", subs)
+                self.call_scheduler("nomad logs -stderr {address} {job_id}", subs)
         except:
             # Try to scrape for job id
             # this will not work well if a job
             # has multiple ids
+            full_id = job_id
             job_id = self.call_scheduler("nomad job status {address} {job_id}", subs, raw=True)
             id_line = False
             for line in job_id.split("\n"):
-                print(">>", line)
+                # print(">>", line)
                 if id_line:
                     # overwrite subs jobs_id with scraped
                     subs['job_id'] = line.split(" ", 1)[0]
@@ -471,8 +507,20 @@ class NomadCLI(Cmd):
                     id_line = True
 
         if retry_with_id is True:
-            self.call_scheduler("nomad logs {address} {job_id}", subs)
-            self.call_scheduler("nomad logs -stderr {address} {job_id}", subs)
+            if tail_lines:
+                jstdout = self.call_scheduler("nomad logs {address} {job_id}", subs, raw=True).split("\n")
+                jstderr = self.call_scheduler("nomad logs -stderr {address} {job_id}", subs, raw=True).split("\n")
+                print("{}  {}".format(full_id,subs['job_id']))
+                print("    stdout:")
+                for line in jstdout[-tail_lines:]:
+                    print("         ",line)
+                print("{}  {}".format(full_id,subs['job_id']))
+                print("    stderr:")
+                for line in jstderr[-tail_lines:]:
+                    print("         ",line)
+            else:
+                self.call_scheduler("nomad logs {address} {job_id}", subs)
+                self.call_scheduler("nomad logs -stderr {address} {job_id}", subs)
 
     def do_job(self, job_name):
         subs = {k : v for k, v in locals().items() if not k == 'self'}
