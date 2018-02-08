@@ -99,20 +99,40 @@ def filter_data(filter_key,pattern):
 
     return data
 
-def filter_data_to_dict(filter_key,pattern,subsort=None):
+def filter_data_to_dict(filter_key,pattern,subsort=None,whitelist=None):
 
     data = enumerate_data(pattern=pattern)
     data_filtered = {}
+    whitelist_passes = None
+
     for d in data:
         has_key = redis_conn.hget(d, filter_key)
         if has_key:
             if not has_key in data_filtered:
                 data_filtered[has_key] = []
 
-            if subsort:
+            if whitelist:
+                check = []
+                for k,v in whitelist.items():
+                    value = redis_conn.hget(d, k)
+                    if value in v and value is not None:
+                        check.append(True)
+                    elif value not in v and value is not None:
+                        check.append(False)
+                    else:
+                        check.append(True)
+
+                if True in set(check) and len(set(check)) == 1:
+                    whitelist_passes = True
+                else:
+                    whitelist_passes = False
+
+            if subsort and whitelist_passes is True or whitelist_passes is None:
                 data_filtered[has_key].append((d,redis_conn.hget(d, subsort)))
-            else:
+            elif not subsort and whitelist_passes is True or whitelist_passes is None:
                 data_filtered[has_key].append(d)
+            else:
+                pass
 
     if subsort:
         for key in data_filtered.keys():
