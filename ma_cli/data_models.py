@@ -141,6 +141,9 @@ def filter_data_to_dict(filter_key,pattern,subsort=None,whitelist=None):
             except Exception as ex:
                 subsorted = sorted(data_filtered[key], key=lambda x: x[1])
             data_filtered[key] = [d[0] for d in subsorted]
+    else:
+        for key in data_filtered.keys():
+            data_filtered[key] = [d[0] for d in data_filtered[key]]
 
     data = data_filtered
     return data
