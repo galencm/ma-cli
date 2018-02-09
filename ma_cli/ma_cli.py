@@ -675,7 +675,7 @@ def main():
     # if run without any args, list all serivces and exit
     if args.service is None:
         for s in local_tools.fuzzy_lookup(""):
-            print("{service:<20}    {ip}:{port}".format(**s))
+            print("{service:<40}    {ip}:{port}".format(**s))
         return
     elif args.service == "image":
         ip, port = local_tools.lookup('redis')
