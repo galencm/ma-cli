@@ -9,6 +9,15 @@ ma-throw slurp | lings-route-gather --collect 2 --pattern glworb:* | uniq | ma-d
 ```
 Slurps from source(s) and views the output after it has been processed by a pipe...
 
+```
+ma-cli image
+image>
+image>use glworb:some_uuid
+image>highlight_regions
+image>view
+```
+(1) Loads glworb and finds associated images, (2) highlights any ocr-ed regions by adding colored rectangles and (3) displays image with overlaid rectangles
+
 * ma-cli: terminals for stuff
     ```
     $ ma-cli -h
