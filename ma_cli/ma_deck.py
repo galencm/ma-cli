@@ -46,8 +46,10 @@ def cli_next_attribute(configuration):
     print("next")
 
 def prepare(call_string, configuration, lookup_attribute):
-    attribute = configuration['attributes'][lookup_attribute]
-
+    try:
+        attribute = configuration['attributes'][lookup_attribute]
+    except:
+        attribute={}
     # have to get to check min/max logic
     formatted = call_string.format_map(Default(attribute))
     return formatted
@@ -70,7 +72,7 @@ def input_loop(bindings):
                         # then as subprocess string
                         globals()[call](bindings)
                     except Exception as ex:
-                        print(type(ex).__name__, ex)
+                        # print(type(ex).__name__, ex)
                         call_formatted = prepare(bindings['calls'][call], bindings, active_attribute)
                         # if pipe in string, use shell=True
                         # problematic since yaml could be any
