@@ -33,7 +33,9 @@ def main():
         results = []
 
         if args.service:
-            services = args.service
+            services = []
+            for service in args.service:
+                services.extend(local_tools.fuzzy_lookup(service))
         else:
             services = local_tools.fuzzy_lookup("zerorpc-")
 
