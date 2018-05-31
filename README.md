@@ -2,6 +2,24 @@
 
 _a collection of higher-level commandline tools for the machinic ecosystem_
 
+## Installation
+
+Pip:
+
+```
+pip3 install git+https://github.com/galencm/ma-cli --user
+```
+
+Develop while using pip:
+
+```
+git clone https://github.com/galencm/ma-cli
+cd ma-cli/
+pip3 install --editable ./ --user
+```
+
+## Usage
+
 **An example:**
 
 ```
