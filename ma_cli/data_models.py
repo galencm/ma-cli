@@ -81,7 +81,7 @@ def remove_field(field_name, uuids):
     modified = []
 
     for u in uuids:
-        redis_conn.hdel(u, field_name)
+        redis_conn.hdel(u, *[field_name])
         modified.append(u)
 
     return modified
