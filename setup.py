@@ -22,7 +22,7 @@ name="ma cli",
                       "zerorpc",
                       "lings"
                      ],
-    dependency_links=["https://github.com/galencm/machinic-lings/tarball/master#egg=lings"],
+    dependency_links=["https://github.com/galencm/machinic-lings/tarball/master#egg=lings-0.1"],
     entry_points = {'console_scripts': ['ma-cli = ma_cli.ma_cli:main',
                                         'ma-deck = ma_cli.ma_deck:main',
                                         'ma-dm = ma_cli.ma_dm:main',

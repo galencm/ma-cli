@@ -7,7 +7,7 @@ _a collection of higher-level commandline tools for the machinic ecosystem_
 Pip:
 
 ```
-pip3 install git+https://github.com/galencm/ma-cli --user
+pip3 install git+https://github.com/galencm/ma-cli --user --process-dependency-links
 ```
 
 Develop while using pip:
