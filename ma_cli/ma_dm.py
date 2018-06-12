@@ -60,7 +60,8 @@ def main():
             print(data_models.range_field(args.field_range, data_models.enumerate_data(args.pattern)))
             return
         else:
-            data_models.enumerate_data(args.pattern)
+            for data in sorted(data_models.enumerate_data(args.pattern)):
+                print(data)
             return
 
     # chomp prefix from uuid if necessary
