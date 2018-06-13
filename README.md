@@ -20,12 +20,18 @@ pip3 install --editable ./ --user
 
 ## Usage
 
-**An example:**
+**Examples:**
 
 ```
 ma-throw slurp | lings-route-gather --collect 2 --pattern glworb:* | uniq | ma-dm
 ```
 Slurps from source(s) and views the output after it has been processed by a pipe...
+
+```
+ma-throw discover
+```
+Discover things such as cameras or primitives
+
 
 ```
 ma-cli image
@@ -35,6 +41,8 @@ image>highlight_regions
 image>view
 ```
 (1) Loads glworb and finds associated images, (2) highlights any ocr-ed regions by adding colored rectangles and (3) displays image with overlaid rectangles
+
+**Tools:**
 
 * ma-cli: terminals for stuff
     ```
