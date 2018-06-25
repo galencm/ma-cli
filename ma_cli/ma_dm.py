@@ -33,6 +33,7 @@ def main():
     parser.add_argument("uuid", nargs='?', help = "hash or uuid of thing")
     parser.add_argument("--see", help = "field to dereference and show")
     parser.add_argument("--see-all", action="store_true", help = "dereference all fields and show with display")
+    parser.add_argument("--output", default=None, help = "save shown key to file")
     parser.add_argument("--prefix", default= "glworb:", help = "set retrieval prefix for hash/uuid")
     parser.add_argument("--pattern", default= "*", help = "list all matching pattern")
     parser.add_argument("--modify", nargs='+', default=[], help = "nonpermanent image modifications, a series of quoted strings ie 'img_grid 500 500'")
@@ -77,7 +78,8 @@ def main():
         data_models.view(args.uuid,
                         args.see,
                         overlay = data_model_string,
-                        prefix = args.prefix)
+                        prefix = args.prefix,
+                        output = args.output)
     elif args.see_all:
         data_model =  data_models.pretty_format(data_thing, args.uuid)
         general_prefix = args.prefix.strip(":")

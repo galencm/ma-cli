@@ -549,7 +549,7 @@ def view_concatenate(uuids, modifications):
         img.close()
         file.close()
 
-def view(thing_uuid, field=None, overlay="", prefix="", layers=None):
+def view(thing_uuid, field=None, overlay="", prefix="", layers=None, output=None):
     env = {}
     try:
         env['substitutions'] = redis_conn.hgetall(thing_uuid)
@@ -565,6 +565,8 @@ def view(thing_uuid, field=None, overlay="", prefix="", layers=None):
             img = img_overlay(img, field_contents, 1, 1, 20)
             img = img_overlay(img, overlay, 1, 100, 20)
             img.show()
+            if output is not None:
+                img.save(output, img.format)
         #return { field : field_contents }
     else:
         with open_image(thing_uuid) as img:
