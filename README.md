@@ -32,6 +32,10 @@ ma-throw discover
 ```
 Discover things such as cameras or primitives
 
+```
+ma-dm | grep ca3c | ma-dm --see-all
+```
+Find a glworb by substring `ca3c` and see a montage of all referenced images in glworb
 
 ```
 ma-cli image
