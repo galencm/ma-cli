@@ -517,7 +517,7 @@ def view_concatenate(uuids, modifications):
     for thing in uuids:
         fields = redis_conn.hgetall(thing)
         for k, v in fields.items():
-            if ":" in v:
+            if ":" in v or "binary:" in v or "glworb_binary:" in v or "_key" in k:
                 try:
                     # append (pil image, file object, fields)
                     images.append((*open_img(thing, key=k), fields))
