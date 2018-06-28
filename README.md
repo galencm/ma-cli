@@ -23,7 +23,7 @@ pip3 install --editable ./ --user
 **Examples:**
 
 ```
-ma-throw slurp | tr -d ",[]'" | tr " " "\n" | uniq | ma-dm
+ma-throw slurp | ma-dm
 ```
 Slurps from source(s) and views the output after it has been processed by a pipe...
 

@@ -64,8 +64,11 @@ def main():
             return
         else:
             for result in results:
-                sys.stdout.write(str(result))
-                sys.stdout.flush()
+                if isinstance(result, list):
+                    for result_item in result:
+                        sys.stdout.write(str(result_item) +  '\n')
+                        sys.stdout.flush()
+                else:
+                    sys.stdout.write(str(result))
+                    sys.stdout.flush()
 
-            # sys.stdout.write(str(results))
-            # return results

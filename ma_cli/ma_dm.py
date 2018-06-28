@@ -24,10 +24,8 @@ def main():
             # glworb:123456 | ma-dm <ocr call> <show with overlay>
             #  ^^ or ma-throw glworb glworb:123456 ocr
             # glworb_binary:123456 | ma-dm <create-glworb> -> stdout glworb:123456
-            quoted_keys = re.findall(r'\'([^]]*)\'', line)
-            keys.extend(quoted_keys)
-            if not quoted_keys and ":" in line:
-                keys.extend([line.strip()])
+            keys.extend(line.split(" "))
+        keys = [key.strip() for key in keys]
 
     parser = argparse.ArgumentParser(description=main.__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("uuid", nargs='?', help = "hash or uuid of thing")
@@ -46,8 +44,6 @@ def main():
 
     if keys:
         data_models.view_concatenate(keys, args.modify)
-        # for key in keys:
-        #     data_models.view(key,overlay = "")
         return
 
     if args.uuid is None:
