@@ -46,6 +46,34 @@ image>view
 ```
 (1) Loads glworb and finds associated images, (2) highlights any ocr-ed regions by adding colored rectangles and (3) displays image with overlaid rectangles
 
+```
+ma-throw slurp | ma-dial --key-xml project:texxt --menu-for part::name category::name
+~~keys~~
+0 glworb:8cec105d-c49c-4472-bbe1-e3c9cfcda83d
+1 glworb:c6b10cb6-1547-45bd-bde9-9a5f207e77af
+0
+working key: glworb:8cec105d-c49c-4472-bbe1-e3c9cfcda83d
+~~things~~
+  part
+0  chapter
+1  misc
+  category
+2  cat1
+0
+~~things~~
+  part
+0  chapter
+1  misc
+  category
+2  cat1
+2
+for key glworb:8cec105d-c49c-4472-bbe1-e3c9cfcda83d
+set chapter to cat1? (y/n)
+y
+done!
+```
+Slurps from source(s) and use loaded project xml to select from and set field values
+
 **Tools:**
 
 * ma-cli: terminals for stuff
@@ -79,6 +107,20 @@ image>view
       --yaml YAML [YAML ...]
                             yaml files to use for configuration and binding
     ```
+
+* ma-dial: dial stuff in
+  ```
+  $ ma-dial -h
+  usage: ma-dial [-h] [--key-xml KEY_XML [KEY_XML ...]]
+               [--menu-for MENU_FOR [MENU_FOR ...]] [--key KEY [KEY ...]]
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    --key-xml KEY_XML [KEY_XML ...]
+                          keys containing xml strings
+    --menu-for MENU_FOR [MENU_FOR ...]
+    --key KEY [KEY ...]   working keys
+  ```
 
 * ma-dm: inspect stuff
     ```
