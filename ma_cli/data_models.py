@@ -13,9 +13,12 @@ import redis
 from PIL import Image, ImageDraw, ImageFont, ImageShow
 from ma_cli import local_tools
 
-r_ip, r_port = local_tools.lookup('redis')
-redis_conn = redis.StrictRedis(host=r_ip, port=str(r_port), decode_responses=True)
-binary_redis_conn = redis.StrictRedis(host=r_ip, port=str(r_port))
+try:
+    r_ip, r_port = local_tools.lookup('redis')
+    redis_conn = redis.StrictRedis(host=r_ip, port=str(r_port), decode_responses=True)
+    binary_redis_conn = redis.StrictRedis(host=r_ip, port=str(r_port))
+except:
+     r_ip, r_port = None, None
 
 class FehImageViewer(ImageShow.UnixViewer):
     def show_file(self, filename, **options):
