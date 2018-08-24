@@ -20,6 +20,7 @@ name="ma cli",
                       "redis",
                       "ruamel.yaml",
                       "zerorpc",
+                      "lxml",
                       "lings"
                      ],
     dependency_links=["https://github.com/galencm/machinic-lings/tarball/master#egg=lings-0.1"],
@@ -30,6 +31,8 @@ name="ma cli",
                                         'ma-dial = ma_cli.ma_dial:main',
                                         'ma-vis = ma_cli.ma_vis:main',
                                         'ma-throw = ma_cli.ma_throw:main',
+                                        'ma-dump = ma_cli.ma_dump:main',
+                                        'ma-load = ma_cli.ma_load:main'
                                         ],
                             },
 )
