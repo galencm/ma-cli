@@ -60,5 +60,3 @@ def main():
     redis_conn = redis.StrictRedis(**db_settings, decode_responses=True)
 
     dump(args.db_host, args.db_port, redis_conn, dump_name=args.output)
-
-main()

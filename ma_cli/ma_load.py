@@ -54,5 +54,3 @@ def main():
     redis_conn = redis.StrictRedis(**db_settings, decode_responses=True)
 
     load(args.filename, args.db_host, args.db_port, redis_conn)
-
-main()
